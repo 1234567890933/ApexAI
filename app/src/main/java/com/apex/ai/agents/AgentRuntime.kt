@@ -1,6 +1,7 @@
 package com.apex.ai.agents
 
 import com.apex.ai.core.ApexLog
+import com.apex.ai.core.DeviceProfile
 import com.apex.ai.llm.ChatMessage
 import com.apex.ai.llm.LlmRequest
 import com.apex.ai.llm.ProviderRegistry
@@ -44,6 +45,9 @@ class AgentRuntime(
 
         var steps = 0
         var finalText = ""
+        var totalToolCalls = 0
+        val seenCalls = mutableMapOf<String, Int>()
+        val callBudget = DeviceProfile.toolCallBudget
 
         while (steps < maxSteps) {
             steps++
@@ -95,10 +99,31 @@ class AgentRuntime(
                 return@flow
             }
 
+            // Loop guard: a model that keeps issuing the same call is stuck, and
+            // re-running it burns quota for nothing.
+            val fresh = calls.filter { call ->
+                val signature = call.toolId + "|" + call.args.toSortedMap().entries
+                    .joinToString("&") { "${it.key}=${it.value}" }
+                val times = (seenCalls[signature] ?: 0) + 1
+                seenCalls[signature] = times
+                times <= 2
+            }
+            if (fresh.isEmpty()) {
+                ApexLog.w("Runtime", "repeated identical tool calls, stopping")
+                emit(AgentEvent.Status("stopped · repeated tool calls"))
+                emit(AgentEvent.Completed(finalText, steps))
+                return@flow
+            }
+
             messages.add(ChatMessage(Role.ASSISTANT, collected.toString().ifBlank { "(tool call)" }))
 
             val observations = StringBuilder()
-            calls.forEach { call ->
+            fresh.forEach { call ->
+                totalToolCalls++
+                if (totalToolCalls > callBudget) {
+                    observations.appendLine("[budget] tool call limit reached")
+                    return@forEach
+                }
                 val tool = tools.find(call.toolId)
                 if (tool == null) {
                     emit(AgentEvent.ToolFinished(call.toolId, false, "Unknown tool", 0))

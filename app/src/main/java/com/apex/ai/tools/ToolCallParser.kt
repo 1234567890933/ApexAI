@@ -19,12 +19,18 @@ class ToolCallParser {
     private val calls = mutableListOf<ToolCall>()
     private var sequence = 0
 
+    // A runaway model can stream megabytes without ever closing a tag. These
+    // bounds keep a bad run from growing the heap until the process dies.
+    private val maxBufferChars = 96 * 1024
+    private val maxCalls = 12
+
     private val openTag = "<tool"
     private val closeTag = "</tool>"
 
     /** Feeds a delta and returns the text that is safe to display right now. */
     fun feed(delta: String): String {
         if (delta.isEmpty()) return ""
+        if (buffer.length > maxBufferChars) compact()
         buffer.append(delta)
         val out = StringBuilder()
 
@@ -77,6 +83,13 @@ class ToolCallParser {
         calls.clear()
     }
 
+    /** Drops already-emitted text so the buffer cannot grow without bound. */
+    private fun compact() {
+        if (cursor <= 0) return
+        buffer.delete(0, cursor)
+        cursor = 0
+    }
+
     private fun partialPrefixLength(): Int {
         val max = minOf(openTag.length - 1, buffer.length)
         for (len in max downTo 1) {
@@ -86,6 +99,7 @@ class ToolCallParser {
     }
 
     private fun parseBlock(raw: String) {
+        if (calls.size >= maxCalls) return
         // raw looks like:  name="hash_text">{"text":"abc"}
         val nameMatch = Regex("name\\s*=\\s*\"([^\"]+)\"").find(raw) ?: return
         val toolId = nameMatch.groupValues[1].trim()

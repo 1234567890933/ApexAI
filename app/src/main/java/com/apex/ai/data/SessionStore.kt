@@ -22,6 +22,9 @@ class SessionStore(context: Context) {
     private val gson = Gson()
     private val maxSessions = 40
 
+    /** Transcripts are unbounded in principle; cap them so storage cannot grow forever. */
+    private val maxMessagesPerSession = 400
+
     private val type = object : TypeToken<MutableList<Session>>() {}.type
 
     fun loadAll(): MutableList<Session> {
@@ -49,6 +52,11 @@ class SessionStore(context: Context) {
     }
 
     fun upsert(session: Session) {
+        if (session.messages.size > maxMessagesPerSession) {
+            val keep = session.messages.takeLast(maxMessagesPerSession)
+            session.messages.clear()
+            session.messages.addAll(keep)
+        }
         val all = loadAll()
         val idx = all.indexOfFirst { it.id == session.id }
         if (idx >= 0) all[idx] = session else all.add(0, session)

@@ -7,6 +7,7 @@ import android.graphics.RadialGradient
 import android.graphics.Shader
 import android.util.AttributeSet
 import android.view.View
+import com.apex.ai.core.DeviceProfile
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -36,7 +37,10 @@ class AuroraBackgroundView @JvmOverloads constructor(
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         removeCallbacks(ticker)
-        postDelayed(ticker, 60L)
+        // On a low-end phone this layer is static: three full-screen radial
+        // shaders per frame is exactly the kind of thing that drops a 6000-series
+        // chip to single-digit frame rates while scrolling.
+        if (DeviceProfile.auroraEnabled) postDelayed(ticker, 60L)
     }
 
     override fun onDetachedFromWindow() {

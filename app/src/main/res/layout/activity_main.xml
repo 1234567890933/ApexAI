@@ -229,10 +229,44 @@
         android:padding="14dp">
 
         <TextView
-            style="@style/Apex.Text.Display"
+            style="@style/Apex.Text.Title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:text="Recent" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerHistory"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_marginTop="6dp"
+            android:clipToPadding="false"
+            android:scrollbars="none" />
+
+        <TextView
+            android:id="@+id/btnExportChat"
+            style="@style/Apex.Text.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_chip"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="Export this chat"
+            android:textColor="@color/apex_cyan" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="14dp"
+            android:background="@color/apex_stroke_soft" />
+
+        <TextView
+            style="@style/Apex.Text.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:text="Agents" />
 
         <TextView
@@ -256,6 +290,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="8dp"
-            android:text="Apex AI · 1.0-beta" />
+            android:text="Apex AI · 1.2-beta" />
     </LinearLayout>
 </androidx.drawerlayout.widget.DrawerLayout>

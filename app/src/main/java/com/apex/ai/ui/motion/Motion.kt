@@ -3,6 +3,7 @@ package com.apex.ai.ui.motion
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.OvershootInterpolator
+import com.apex.ai.core.DeviceProfile
 import kotlinx.coroutines.delay
 
 /**
@@ -14,6 +15,11 @@ object Motion {
     private const val ENTER_MS = 260L
 
     fun enter(view: View, index: Int = 0) {
+        if (!DeviceProfile.animationsEnabled) {
+            view.alpha = 1f
+            view.translationY = 0f
+            return
+        }
         val density = view.resources.displayMetrics.density
         view.alpha = 0f
         view.translationY = 14f * density
@@ -28,6 +34,7 @@ object Motion {
 
     /** Press feedback: scale down on touch, spring back on release. */
     fun attachPressScale(view: View, scale: Float = 0.96f) {
+        if (!DeviceProfile.animationsEnabled) return
         view.setOnTouchListener { v, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> v.animate().scaleX(scale).scaleY(scale).setDuration(90).start()
@@ -40,6 +47,7 @@ object Motion {
     }
 
     fun pulse(view: View) {
+        if (!DeviceProfile.animationsEnabled) return
         view.animate().cancel()
         view.alpha = 0.45f
         view.animate().alpha(1f).setDuration(320).start()

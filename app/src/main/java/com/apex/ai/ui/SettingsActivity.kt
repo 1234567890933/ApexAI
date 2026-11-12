@@ -189,8 +189,9 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun promptPasscode() {
         val input = EditText(this).apply {
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
-            hint = "Passcode"
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            hint = "Passphrase"
             setPadding(dp(22), dp(16), dp(22), dp(16))
             setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.apex_text))
             setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.apex_text_faint))

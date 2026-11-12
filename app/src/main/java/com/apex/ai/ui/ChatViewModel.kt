@@ -86,4 +86,27 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun recentSessions(): List<Session> = container.sessions.loadAll()
+
+    /** Re-opens a stored conversation and keeps the agent that produced it. */
+    fun open(sessionId: String): Session? {
+        val found = container.sessions.loadAll().firstOrNull { it.id == sessionId } ?: return null
+        session = found
+        container.vault.selectedAgentId = found.agentId
+        return found
+    }
+
+    fun transcriptText(): String = buildString {
+        appendLine("# ${session.title}")
+        appendLine()
+        session.messages.forEach { message ->
+            when (message.kind) {
+                MessageKind.USER.name -> appendLine("**You:** ${message.text}")
+                MessageKind.ASSISTANT.name ->
+                    appendLine("**${message.agentName.ifBlank { "Apex" }}:** ${message.text}")
+                else -> Unit
+            }
+            appendLine()
+        }
+        append("— exported from Apex AI")
+    }
 }

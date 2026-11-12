@@ -29,6 +29,8 @@ import com.apex.ai.agents.AgentEvent
 import com.apex.ai.agents.AgentSpec
 import com.apex.ai.core.AppContainer
 import com.apex.ai.core.ApexLog
+import com.apex.ai.core.DeviceProfile
+import com.apex.ai.data.model.Session
 import com.apex.ai.speech.SpeechEngine
 import com.apex.ai.speech.VoiceInput
 import com.apex.ai.ui.ChatViewModel
@@ -39,8 +41,12 @@ import com.apex.ai.ui.chat.AgentPickerSheet
 import com.apex.ai.ui.chat.ChatAdapter
 import com.apex.ai.ui.chat.ChatItem
 import com.apex.ai.ui.chat.RowKind
+import com.apex.ai.ui.chat.SessionAdapter
+import com.apex.ai.ui.chat.toChatItem
 import com.apex.ai.ui.motion.Motion
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -59,6 +65,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var chatAdapter: ChatAdapter
     private lateinit var agentAdapter: AgentAdapter
+    private lateinit var historyAdapter: SessionAdapter
+    private lateinit var recyclerHistory: RecyclerView
     private lateinit var speech: SpeechEngine
     private lateinit var voiceInput: VoiceInput
     private lateinit var btnMic: ImageButton
@@ -101,6 +109,7 @@ class MainActivity : AppCompatActivity() {
         drawer = findViewById(R.id.drawerLayout)
         recyclerChat = findViewById(R.id.recyclerChat)
         recyclerAgents = findViewById(R.id.recyclerAgents)
+        recyclerHistory = findViewById(R.id.recyclerHistory)
         inputPrompt = findViewById(R.id.inputPrompt)
         btnSend = findViewById(R.id.btnSend)
         tvAgentName = findViewById(R.id.tvAgentName)
@@ -120,7 +129,7 @@ class MainActivity : AppCompatActivity() {
         recyclerChat.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         recyclerChat.adapter = chatAdapter
         recyclerChat.itemAnimator?.addDuration = 180
-        recyclerChat.setItemViewCacheSize(14)
+        recyclerChat.setItemViewCacheSize(DeviceProfile.recyclerCacheSize)
         recyclerChat.setHasFixedSize(false)
     }
 
@@ -133,8 +142,19 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<ImageButton>(R.id.btnAgents).setOnClickListener {
             container.haptics.tap(it)
+            refreshHistory()
             drawer.openDrawer(GravityCompat.START)
         }
+        historyAdapter = SessionAdapter { session -> openSession(session) }
+        recyclerHistory.layoutManager = LinearLayoutManager(this)
+        recyclerHistory.adapter = historyAdapter
+        recyclerHistory.setItemViewCacheSize(6)
+
+        findViewById<TextView>(R.id.btnExportChat).setOnClickListener {
+            container.haptics.tap(it)
+            exportChat()
+        }
+
         tvAgentName.setOnLongClickListener {
             currentAgent?.let { agent ->
                 AgentPickerSheet.show(this, viewModel.catalog.all, agent.id) { picked ->
@@ -373,6 +393,7 @@ class MainActivity : AppCompatActivity() {
         setStreamingUi(false)
         tvStatus.text = currentAgent?.tagline ?: "ready"
         viewModel.persist()
+        refreshHistory()
         container.haptics.receive()
     }
 
@@ -386,6 +407,44 @@ class MainActivity : AppCompatActivity() {
     private fun setStreamingUi(streaming: Boolean) {
         btnSend.setImageResource(if (streaming) R.drawable.ic_stop else R.drawable.ic_send)
         btnSend.contentDescription = getString(if (streaming) R.string.action_stop else R.string.action_send)
+    }
+
+    // ---------------------------------------------------------------- history
+    private fun refreshHistory() {
+        lifecycleScope.launch {
+            val sessions = withContext(Dispatchers.IO) { viewModel.recentSessions() }
+            historyAdapter.update(sessions)
+        }
+    }
+
+    private fun openSession(session: Session) {
+        val opened = viewModel.open(session.id) ?: return
+        val agent = viewModel.catalog.byId(opened.agentId)
+        currentAgent = agent
+        tvAgentName.text = agent.name
+        tvStatus.text = agent.tagline
+        agentAdapter.update(viewModel.catalog.all, agent.id)
+
+        val items = opened.messages.map { it.toChatItem(agent.name, agent.glyph) }
+        chatAdapter.replaceAll(items)
+        emptyState.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+        drawer.closeDrawer(GravityCompat.START)
+        scrollToEnd()
+        container.haptics.tap(recyclerChat)
+    }
+
+    private fun exportChat() {
+        val transcript = viewModel.transcriptText()
+        if (viewModel.session.messages.isEmpty()) {
+            toast("Nothing to export yet")
+            return
+        }
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, "Apex AI · ${viewModel.session.title}")
+            putExtra(Intent.EXTRA_TEXT, transcript)
+        }
+        startActivity(Intent.createChooser(intent, "Export chat"))
     }
 
     // ---------------------------------------------------------------- misc ui

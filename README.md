@@ -35,6 +35,10 @@ Keystore, streams tokens over SSE, and lets the model call tools on the device.
 | Voice | Platform TTS for replies; platform speech recognition for dictation (free, on-device where available) |
 | Diagnostics | Uncaught-exception reporter written to a private file, surfaced in Settings |
 | UI | Material 3 + custom glass panels, aurora depth layer, spring motion, haptics |
+| Icons | 25 hand-authored vector icons, one per tool, plus launcher art and a repo banner |
+| Low-end | `DeviceProfile` detects low-RAM / 4-core devices and drops shaders, springs and cache sizes |
+| Stability | SSE retry with backoff, tool-call loop guard, bounded stream buffer, capped transcripts |
+| History | Recent-chat list in the drawer, reopen any session, export a chat as Markdown |
 
 ## Agent presets
 
@@ -123,6 +127,19 @@ so cancellation is just cancelling the collector.
 - Backups exclude the vault (`data_extraction_rules.xml`).
 - No analytics, no telemetry, no third-party SDKs.
 
+## Performance on cheap hardware
+
+`DeviceProfile` is evaluated once at start-up from `ActivityManager.isLowRamDevice`,
+total RAM and core count. On a low-end phone (2 GB, four cores, 6-series and below):
+
+- the aurora shader layer is drawn once and never animated
+- spring and stagger animations are skipped, lists still appear instantly
+- the RecyclerView view cache shrinks from 16 to 8
+- the per-run tool-call budget drops from 24 to 12
+
+Everything else behaves identically, because correctness must not depend on the
+device tier.
+
 ## Advanced section
 
 Settings → scroll to the bottom → **Advanced**. It is gated by a 20-digit passcode.
@@ -134,6 +151,17 @@ ability to raise the step budget. What it does **not** do: it does not disable t
 agents' safety rules, and there is no backdoor that turns guardrails off. A locked
 configuration panel is fine; a hidden switch that makes an autonomous agent ignore
 its own limits is not something this project ships.
+
+## What 1.2 changed
+
+- SSE calls retry with exponential backoff when they fail before the first token;
+  after that a retry would duplicate text, so the failure is surfaced instead.
+- The agent loop refuses to re-run an identical tool call more than twice and
+  enforces a total call budget, so a confused model cannot burn a quota.
+- The tool-call parser compacts its buffer, so a stream that never closes a tag
+  cannot grow the heap until the process dies.
+- Transcripts are capped at 400 messages per session.
+- Every tool got its own vector icon; the toolkit no longer renders a glyph.
 
 ## Limits, stated honestly
 
@@ -149,6 +177,8 @@ its own limits is not something this project ships.
   so bundling gigabytes of weights would be dead weight on the device.
 - Team runs and the panel-style agents are sequential; parallelism on a phone buys
   rate limits, not speed.
+- The APK is small on purpose. Nothing is padded to inflate the download; adding
+  bulk without behaviour would only slow the install.
 
 ## License
 
