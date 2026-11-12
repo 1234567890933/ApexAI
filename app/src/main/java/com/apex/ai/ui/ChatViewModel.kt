@@ -2,18 +2,22 @@ package com.apex.ai.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.apex.ai.agents.AgentCatalog
 import com.apex.ai.agents.AgentEvent
 import com.apex.ai.agents.AgentRuntime
 import com.apex.ai.agents.Orchestrator
 import com.apex.ai.agents.TeamOrchestrator
+import com.apex.ai.core.AdvancedGate
 import com.apex.ai.core.AppContainer
 import com.apex.ai.data.model.MessageKind
 import com.apex.ai.data.model.Session
 import com.apex.ai.data.model.StoredMessage
 import com.apex.ai.llm.ChatMessage
 import com.apex.ai.llm.Role
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 /**
  * Owns conversation state and the engine wiring. The activity only renders and
@@ -39,10 +43,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
      */
     private fun orchestrator(): Orchestrator {
         val steps = container.vault.maxAgentSteps
+        val extra = if (AdvancedGate.isUnlocked(getApplication())) {
+            container.vault.customSystemPrompt
+        } else {
+            ""
+        }
         return Orchestrator(
             catalog = catalog,
-            runtime = AgentRuntime(container.providers, container.tools, steps),
-            teams = TeamOrchestrator(container.providers, container.tools, steps)
+            runtime = AgentRuntime(container.providers, container.tools, steps, customPrompt = { extra }),
+            teams = TeamOrchestrator(container.providers, container.tools, steps, customPrompt = { extra })
         )
     }
 
@@ -72,7 +81,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun persist() {
         session.updatedAt = System.currentTimeMillis()
-        container.sessions.upsert(session)
+        val snapshot = session
+        viewModelScope.launch(Dispatchers.IO) { container.sessions.upsert(snapshot) }
     }
 
     fun recentSessions(): List<Session> = container.sessions.loadAll()

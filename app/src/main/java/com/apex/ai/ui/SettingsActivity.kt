@@ -1,6 +1,7 @@
 package com.apex.ai.ui
 
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageButton
@@ -12,6 +13,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.apex.ai.R
+import com.apex.ai.core.AdvancedGate
+import com.apex.ai.core.ApexCrashHandler
 import com.apex.ai.core.ApexLog
 import com.apex.ai.core.AppContainer
 import com.apex.ai.core.ProviderIds
@@ -38,6 +41,11 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var seekSteps: SeekBar
     private lateinit var switchVoice: MaterialSwitch
     private lateinit var switchHaptics: MaterialSwitch
+    private lateinit var tvAdvancedState: TextView
+    private lateinit var btnAdvancedUnlock: com.google.android.material.button.MaterialButton
+    private lateinit var advancedPanel: View
+    private lateinit var inputSystemPrompt: EditText
+    private lateinit var tvCrash: TextView
 
     private var selectedProvider: String = ProviderIds.DEFAULT
 
@@ -52,6 +60,8 @@ class SettingsActivity : AppCompatActivity() {
         buildProviderChips()
         restore()
         wire()
+        refreshAdvanced()
+        renderCrash()
     }
 
     private fun bind() {
@@ -68,6 +78,11 @@ class SettingsActivity : AppCompatActivity() {
         seekSteps = findViewById(R.id.seekSteps)
         switchVoice = findViewById(R.id.switchVoice)
         switchHaptics = findViewById(R.id.switchHaptics)
+        tvAdvancedState = findViewById(R.id.tvAdvancedState)
+        btnAdvancedUnlock = findViewById(R.id.btnAdvancedUnlock)
+        advancedPanel = findViewById(R.id.advancedPanel)
+        inputSystemPrompt = findViewById(R.id.inputSystemPrompt)
+        tvCrash = findViewById(R.id.tvCrash)
 
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
     }
@@ -151,6 +166,71 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<com.google.android.material.button.MaterialButton>(R.id.btnClear).setOnClickListener {
             confirmWipe()
         }
+        btnAdvancedUnlock.setOnClickListener { toggleAdvanced() }
+        findViewById<com.google.android.material.button.MaterialButton>(R.id.btnClearCrash)
+            .setOnClickListener {
+                ApexCrashHandler.clear(this)
+                renderCrash()
+                toast("Crash report cleared")
+            }
+    }
+
+    // ---------------------------------------------------------------- advanced
+    private fun toggleAdvanced() {
+        if (AdvancedGate.isUnlocked(this)) {
+            AdvancedGate.lock(this)
+            container.haptics.tap(btnAdvancedUnlock)
+            refreshAdvanced()
+            toast("Advanced mode locked")
+        } else {
+            promptPasscode()
+        }
+    }
+
+    private fun promptPasscode() {
+        val input = EditText(this).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            hint = "Passcode"
+            setPadding(dp(22), dp(16), dp(22), dp(16))
+            setTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.apex_text))
+            setHintTextColor(ContextCompat.getColor(this@SettingsActivity, R.color.apex_text_faint))
+        }
+        AlertDialog.Builder(this, R.style.Apex_Dialog)
+            .setTitle("Advanced passcode")
+            .setView(input)
+            .setPositiveButton("Unlock") { _, _ ->
+                if (AdvancedGate.tryUnlock(this, input.text.toString())) {
+                    container.haptics.success()
+                    refreshAdvanced()
+                    toast("Advanced mode unlocked")
+                } else {
+                    container.haptics.warn()
+                    toast("Incorrect passcode")
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun refreshAdvanced() {
+        val unlocked = AdvancedGate.isUnlocked(this)
+        advancedPanel.visibility = if (unlocked) View.VISIBLE else View.GONE
+        tvAdvancedState.text = getString(
+            if (unlocked) R.string.label_advanced_unlocked else R.string.label_advanced_locked
+        )
+        btnAdvancedUnlock.text = if (unlocked) "Lock advanced mode" else "Unlock advanced mode"
+        if (unlocked) {
+            inputSystemPrompt.setText(container.vault.customSystemPrompt)
+        }
+    }
+
+    private fun renderCrash() {
+        val report = ApexCrashHandler.lastReport(this)
+        tvCrash.text = report ?: "No crash recorded."
+    }
+
+    private fun toast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     private fun updateTempLabel() {
@@ -177,6 +257,9 @@ class SettingsActivity : AppCompatActivity() {
         container.vault.modelId = inputModel.text.toString().trim()
         container.vault.temperature = seekTemp.progress / 10f
         container.vault.maxAgentSteps = seekSteps.progress + 1
+        if (AdvancedGate.isUnlocked(this)) {
+            container.vault.customSystemPrompt = inputSystemPrompt.text.toString()
+        }
         container.vault.voiceEnabled = switchVoice.isChecked
         container.vault.hapticsEnabled = switchHaptics.isChecked
         container.haptics.enabled = switchHaptics.isChecked

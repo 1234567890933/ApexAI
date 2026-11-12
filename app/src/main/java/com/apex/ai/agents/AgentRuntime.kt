@@ -22,7 +22,8 @@ import kotlinx.coroutines.flow.flow
 class AgentRuntime(
     private val providers: ProviderRegistry,
     private val tools: ToolRegistry,
-    private val maxSteps: Int = 8
+    private val maxSteps: Int = 8,
+    private val customPrompt: () -> String = { "" }
 ) {
 
     fun run(
@@ -36,7 +37,7 @@ class AgentRuntime(
             return@flow
         }
         val model = providers.activeModel()
-        val systemPrompt = PromptBuilder.build(spec, tools)
+        val systemPrompt = PromptBuilder.build(spec, tools, customPrompt())
 
         val messages = history.toMutableList()
         messages.add(ChatMessage(Role.USER, prompt))

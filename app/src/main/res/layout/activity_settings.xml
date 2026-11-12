@@ -175,6 +175,110 @@
             android:text="Wipe credentials and history"
             android:textColor="@color/apex_red" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="22dp"
+            android:background="@color/apex_stroke_soft" />
+
+        <TextView
+            style="@style/Apex.Text.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/title_advanced" />
+
+        <TextView
+            android:id="@+id/tvAdvancedState"
+            style="@style/Apex.Text.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/label_advanced_locked" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAdvancedUnlock"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Unlock advanced mode"
+            android:textColor="@color/apex_violet" />
+
+        <LinearLayout
+            android:id="@+id/advancedPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                style="@style/Apex.Text.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Extra instruction appended to every agent prompt" />
+
+            <EditText
+                android:id="@+id/inputSystemPrompt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_input_field"
+                android:gravity="top|start"
+                android:hint="e.g. Answer in Hindi, be terse, cite units in lakh and crore"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minLines="3"
+                android:padding="14dp"
+                android:textColor="@color/apex_text"
+                android:textColorHint="@color/apex_text_faint"
+                android:textSize="13sp" />
+
+            <TextView
+                style="@style/Apex.Text.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Advanced mode changes configuration only. The agents' safety rules stay in force." />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="22dp"
+            android:background="@color/apex_stroke_soft" />
+
+        <TextView
+            style="@style/Apex.Text.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="Last crash report" />
+
+        <TextView
+            android:id="@+id/tvCrash"
+            style="@style/Apex.Text.Mono"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_glass_soft"
+            android:lineSpacingMultiplier="1.15"
+            android:padding="12dp"
+            android:textColor="@color/apex_text_dim"
+            android:textSize="10sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnClearCrash"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear report"
+            android:textColor="@color/apex_text_dim" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="18dp"
+            android:background="@color/apex_stroke_soft" />
+
         <TextView
             style="@style/Apex.Text.Title"
             android:layout_width="wrap_content"

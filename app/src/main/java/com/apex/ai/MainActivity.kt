@@ -1,6 +1,9 @@
 package com.apex.ai
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -13,6 +16,7 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -26,6 +30,7 @@ import com.apex.ai.agents.AgentSpec
 import com.apex.ai.core.AppContainer
 import com.apex.ai.core.ApexLog
 import com.apex.ai.speech.SpeechEngine
+import com.apex.ai.speech.VoiceInput
 import com.apex.ai.ui.ChatViewModel
 import com.apex.ai.ui.SettingsActivity
 import com.apex.ai.ui.ToolkitActivity
@@ -55,6 +60,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chatAdapter: ChatAdapter
     private lateinit var agentAdapter: AgentAdapter
     private lateinit var speech: SpeechEngine
+    private lateinit var voiceInput: VoiceInput
+    private lateinit var btnMic: ImageButton
 
     private var currentAgent: AgentSpec? = null
     private var streamJob: Job? = null
@@ -64,6 +71,11 @@ class MainActivity : AppCompatActivity() {
 
     private val flushRunnable = Runnable { flushTokens() }
 
+    private val micPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) startDictation() else toast(getString(R.string.msg_mic_denied))
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -71,6 +83,7 @@ class MainActivity : AppCompatActivity() {
         container = AppContainer.get(this)
         container.haptics.enabled = container.vault.hapticsEnabled
         speech = SpeechEngine(this)
+        voiceInput = VoiceInput(this)
 
         bindViews()
         wireChat()
@@ -94,7 +107,9 @@ class MainActivity : AppCompatActivity() {
         tvStatus = findViewById(R.id.tvAgentStatus)
         emptyState = findViewById(R.id.emptyState)
 
+        btnMic = findViewById(R.id.btnMic)
         Motion.attachPressScale(btnSend, 0.9f)
+        Motion.attachPressScale(btnMic, 0.9f)
     }
 
     private fun wireChat() {
@@ -105,6 +120,8 @@ class MainActivity : AppCompatActivity() {
         recyclerChat.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         recyclerChat.adapter = chatAdapter
         recyclerChat.itemAnimator?.addDuration = 180
+        recyclerChat.setItemViewCacheSize(14)
+        recyclerChat.setHasFixedSize(false)
     }
 
     private fun wireAgents() {
@@ -149,6 +166,59 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btnNewChat).setOnClickListener {
             newChat()
         }
+        btnMic.setOnClickListener { onMicTapped() }
+    }
+
+    // ---------------------------------------------------------------- dictation
+    private fun onMicTapped() {
+        if (voiceInput.isListening) {
+            voiceInput.stop()
+            return
+        }
+        val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+        if (granted) startDictation() else micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+    }
+
+    private fun startDictation() {
+        if (!voiceInput.isAvailable()) {
+            toast(getString(R.string.msg_no_speech))
+            return
+        }
+        container.haptics.tap(btnMic)
+        voiceInput.start(object : VoiceInput.Listener {
+            override fun onState(listening: Boolean) {
+                btnMic.imageTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        this@MainActivity,
+                        if (listening) R.color.apex_cyan else R.color.apex_text_dim
+                    )
+                )
+                tvStatus.text = if (listening) {
+                    getString(R.string.label_listening)
+                } else {
+                    currentAgent?.tagline ?: "ready"
+                }
+            }
+
+            override fun onPartial(text: String) {
+                inputPrompt.setText(text)
+                inputPrompt.setSelection(inputPrompt.text.length)
+            }
+
+            override fun onFinal(text: String) {
+                inputPrompt.setText(text)
+                inputPrompt.setSelection(inputPrompt.text.length)
+                container.haptics.receive()
+            }
+
+            override fun onError(message: String) {
+                toast(message)
+                btnMic.imageTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(this@MainActivity, R.color.apex_text_dim)
+                )
+            }
+        })
     }
 
     // ---------------------------------------------------------------- agents
@@ -374,6 +444,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         main.removeCallbacks(flushRunnable)
         streamJob?.cancel()
+        runCatching { voiceInput.destroy() }
         speech.shutdown()
         super.onDestroy()
     }

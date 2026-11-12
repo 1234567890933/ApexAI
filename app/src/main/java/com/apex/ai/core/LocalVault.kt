@@ -93,6 +93,11 @@ class LocalVault(context: Context) {
         get() = prefs.getInt("max_agent_steps", 8)
         set(value) = prefs.edit().putInt("max_agent_steps", value.coerceIn(1, 24)).apply()
 
+    /** Only editable while the Advanced section is unlocked. */
+    var customSystemPrompt: String
+        get() = prefs.getString("custom_system_prompt", "") ?: ""
+        set(value) = prefs.edit().putString("custom_system_prompt", value.trim()).apply()
+
     fun clearVault() {
         prefs.edit().clear().apply()
     }

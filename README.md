@@ -29,10 +29,11 @@ Keystore, streams tokens over SSE, and lets the model call tools on the device.
 | Providers | Gemini `streamGenerateContent` + any OpenAI-compatible `/chat/completions` |
 | Agent modes | `SINGLE` (one shot), `OPEN_ENDED` (tool loop), `TEAM` (manager + specialists) |
 | Tool protocol | `<tool name="id">{json}</tool>` with a streaming filter that never shows markup |
-| Tools | 22 built in across compute, text, network, security, files, system |
+| Tools | 25 built in across compute, text, network, security, files, system |
 | Credentials | `EncryptedSharedPreferences` on an AES-256-GCM Keystore master key |
 | History | Atomic JSON persistence, 40 sessions, no Room/KSP |
-| Voice | Platform TTS, offline, per-message speaker button |
+| Voice | Platform TTS for replies; platform speech recognition for dictation (free, on-device where available) |
+| Diagnostics | Uncaught-exception reporter written to a private file, surfaced in Settings |
 | UI | Material 3 + custom glass panels, aurora depth layer, spring motion, haptics |
 
 ## Agent presets
@@ -47,6 +48,11 @@ Keystore, streams tokens over SSE, and lets the model call tools on the device.
 | **Compass** | single | Turns a goal into an ordered plan |
 | **Sentinel** | autonomous | Static security review of packages you own |
 | **Prism** | autonomous | Reverse-engineering study partner |
+| **Sage** | single | Teaches from first principles |
+| **Glitch** | autonomous | Root-causes a bug from the evidence you paste |
+| **Atlas** | autonomous | Trip plans and budgets in ₹ |
+| **Muse** | single | Naming and ideation |
+| **Briefer** | single | Compresses long material without losing the argument |
 | **Team · Ship** | team | Architect → Engineer → Reviewer → QA |
 | **Team · Probe** | team | Scout → Analyst → Editor |
 
@@ -117,6 +123,18 @@ so cancellation is just cancelling the collector.
 - Backups exclude the vault (`data_extraction_rules.xml`).
 - No analytics, no telemetry, no third-party SDKs.
 
+## Advanced section
+
+Settings → scroll to the bottom → **Advanced**. It is gated by a 20-digit passcode.
+Only the SHA-256 digest is compiled into the APK; the passphrase is not in this
+repository, so reading the source does not reveal it.
+
+What it unlocks: an extra instruction appended to every agent prompt, and the
+ability to raise the step budget. What it does **not** do: it does not disable the
+agents' safety rules, and there is no backdoor that turns guardrails off. A locked
+configuration panel is fine; a hidden switch that makes an autonomous agent ignore
+its own limits is not something this project ships.
+
 ## Limits, stated honestly
 
 - This is a **client**: it needs a provider key and network access to answer.
@@ -126,6 +144,11 @@ so cancellation is just cancelling the collector.
   resources; it is a triage view, not a substitute for `aapt2 dump`.
 - The step budget (default 8) caps autonomous runs so a confused model cannot burn
   your quota.
+- APK size is 2.5 MB because the app contains code, not model weights. Apps that
+  ship at 200 MB+ are carrying neural network weights. Apex calls a hosted model,
+  so bundling gigabytes of weights would be dead weight on the device.
+- Team runs and the panel-style agents are sequential; parallelism on a phone buys
+  rate limits, not speed.
 
 ## License
 

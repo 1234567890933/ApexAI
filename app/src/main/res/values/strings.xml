@@ -19,4 +19,12 @@
     <string name="label_tool_running">Running tool</string>
     <string name="label_no_key">No API key yet — open Settings to connect a provider.</string>
     <string name="cd_agent_avatar">Agent avatar</string>
+    <string name="action_dictate">Dictate</string>
+    <string name="action_stop_dictation">Stop dictation</string>
+    <string name="label_listening">Listening…</string>
+    <string name="msg_no_speech">No speech recogniser on this device. Install Google Speech Services or type instead.</string>
+    <string name="msg_mic_denied">Microphone permission is needed to dictate.</string>
+    <string name="title_advanced">Advanced</string>
+    <string name="label_advanced_locked">Locked. Enter the 20-digit passcode.</string>
+    <string name="label_advanced_unlocked">Unlocked</string>
 </resources>

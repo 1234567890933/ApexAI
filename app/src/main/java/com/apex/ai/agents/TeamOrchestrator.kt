@@ -22,10 +22,11 @@ import kotlinx.coroutines.flow.flow
 class TeamOrchestrator(
     private val providers: ProviderRegistry,
     private val tools: ToolRegistry,
-    private val maxSteps: Int = 8
+    private val maxSteps: Int = 8,
+    private val customPrompt: () -> String = { "" }
 ) {
 
-    private val runtime = AgentRuntime(providers, tools, maxSteps)
+    private val runtime = AgentRuntime(providers, tools, maxSteps, customPrompt)
 
     private data class Assignment(val role: String, val task: String)
 
