@@ -1,0 +1,79 @@
+name: Build Apex AI APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "master", "main" ]
+    tags: [ "v*" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK packages
+        run: |
+          sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          yes | sdkmanager --licenses || true
+
+      - name: Generate signing keystore
+        run: |
+          keytool -genkeypair -v \
+            -keystore "$RUNNER_TEMP/apex-release.jks" \
+            -storepass apexrelease -keypass apexrelease \
+            -alias apex -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Apex AI, OU=Engineering, O=Apex, L=Bengaluru, S=Karnataka, C=IN"
+
+      - name: Unit tests
+        run: gradle test --no-daemon --stacktrace
+
+      - name: Assemble debug APK
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: Assemble release APK
+        env:
+          APEX_KEYSTORE: ${{ runner.temp }}/apex-release.jks
+          APEX_STORE_PASS: apexrelease
+          APEX_KEY_ALIAS: apex
+          APEX_KEY_PASS: apexrelease
+        run: gradle assembleRelease --no-daemon --stacktrace
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          find app/build/outputs/apk -name "*.apk" -exec cp {} out/ \;
+          ls -la out
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-ai-apks
+          path: out/*.apk
+          if-no-files-found: error
+
+      - name: Attach APKs to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*.apk
+          generate_release_notes: true

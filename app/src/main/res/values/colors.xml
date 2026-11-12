@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="apex_bg">#FF06080F</color>
+    <color name="apex_bg_alt">#FF0B0F1C</color>
+    <color name="apex_surface">#FF121828</color>
+    <color name="apex_glass">#B3121828</color>
+    <color name="apex_glass_strong">#D91A2236</color>
+    <color name="apex_stroke">#33FFFFFF</color>
+    <color name="apex_stroke_soft">#1AFFFFFF</color>
+    <color name="apex_violet">#FF7C5CFF</color>
+    <color name="apex_violet_deep">#FF5B3FE0</color>
+    <color name="apex_cyan">#FF22D3EE</color>
+    <color name="apex_pink">#FFF472B6</color>
+    <color name="apex_amber">#FFFBBF24</color>
+    <color name="apex_green">#FF34D399</color>
+    <color name="apex_red">#FFF87171</color>
+    <color name="apex_text">#FFE8ECF7</color>
+    <color name="apex_text_dim">#FF8A93AB</color>
+    <color name="apex_text_faint">#FF5B6478</color>
+    <color name="apex_user_bubble">#FF2A2350</color>
+    <color name="apex_transparent">#00000000</color>
+</resources>

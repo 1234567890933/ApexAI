@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Theme.ApexAI" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/apex_violet</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorPrimaryContainer">@color/apex_violet_deep</item>
+        <item name="colorSecondary">@color/apex_cyan</item>
+        <item name="colorTertiary">@color/apex_pink</item>
+        <item name="colorSurface">@color/apex_surface</item>
+        <item name="colorOnSurface">@color/apex_text</item>
+        <item name="colorError">@color/apex_red</item>
+        <item name="android:colorBackground">@color/apex_bg</item>
+        <item name="android:windowBackground">@color/apex_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:textColorPrimary">@color/apex_text</item>
+        <item name="android:textColorSecondary">@color/apex_text_dim</item>
+        <item name="android:windowAnimationStyle">@style/Apex.WindowAnimation</item>
+        <item name="materialAlertDialogTheme">@style/Apex.Dialog</item>
+        <item name="bottomSheetDialogTheme">@style/Apex.BottomSheet</item>
+    </style>
+
+    <style name="Apex.WindowAnimation">
+        <item name="android:activityOpenEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:activityOpenExitAnimation">@android:anim/fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:activityCloseExitAnimation">@android:anim/fade_out</item>
+    </style>
+
+    <style name="Apex.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurface">@color/apex_glass_strong</item>
+        <item name="android:textColorPrimary">@color/apex_text</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Apex.Dialog.Button</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Apex.Dialog.Button</item>
+    </style>
+
+    <style name="Apex.Dialog.Button" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">@color/apex_cyan</item>
+    </style>
+
+    <style name="Apex.BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Apex.BottomSheet.Style</item>
+    </style>
+
+    <style name="Apex.BottomSheet.Style" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">@color/apex_bg_alt</item>
+        <item name="shapeAppearance">@style/Apex.Shape.Sheet</item>
+    </style>
+
+    <style name="Apex.Shape.Sheet" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">28dp</item>
+        <item name="cornerSizeTopRight">28dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <style name="Apex.Text.Display" parent="">
+        <item name="android:textColor">@color/apex_text</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="Apex.Text.Title" parent="">
+        <item name="android:textColor">@color/apex_text</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Apex.Text.Body" parent="">
+        <item name="android:textColor">@color/apex_text</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:lineSpacingMultiplier">1.22</item>
+    </style>
+
+    <style name="Apex.Text.Caption" parent="">
+        <item name="android:textColor">@color/apex_text_dim</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:letterSpacing">0.03</item>
+    </style>
+
+    <style name="Apex.Text.Mono" parent="">
+        <item name="android:textColor">@color/apex_text</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">monospace</item>
+    </style>
+
+    <style name="Apex.IconButton" parent="Widget.Material3.Button.IconButton">
+        <item name="android:tint">@color/apex_text_dim</item>
+        <item name="android:background">@drawable/bg_icon_ripple</item>
+    </style>
+</resources>

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/apex_bg"
+    android:fitsSystemWindows="true"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="18dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="28dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_icon_ripple"
+                android:padding="10dp"
+                android:src="@drawable/ic_back"
+                android:tint="@color/apex_text_dim" />
+
+            <TextView
+                style="@style/Apex.Text.Display"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/title_settings"
+                android:textSize="22sp" />
+        </LinearLayout>
+
+        <TextView
+            style="@style/Apex.Text.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Provider" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/providerRow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+        <TextView
+            android:id="@+id/tvProviderHint"
+            style="@style/Apex.Text.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="" />
+
+        <EditText
+            android:id="@+id/inputKey"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_input_field"
+            android:hint="API key"
+            android:inputType="textPassword"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="@color/apex_text"
+            android:textColorHint="@color/apex_text_faint"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvKeyState"
+            style="@style/Apex.Text.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="" />
+
+        <EditText
+            android:id="@+id/inputBase"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_input_field"
+            android:hint="Base URL (optional)"
+            android:inputType="textUri"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="@color/apex_text"
+            android:textColorHint="@color/apex_text_faint"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/inputModel"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_input_field"
+            android:hint="Model id"
+            android:inputType="text"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="@color/apex_text"
+            android:textColorHint="@color/apex_text_faint"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvTempLabel"
+            style="@style/Apex.Text.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Creativity 0.7" />
+
+        <SeekBar
+            android:id="@+id/seekTemp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="20" />
+
+        <TextView
+            android:id="@+id/tvStepsLabel"
+            style="@style/Apex.Text.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Agent step budget 8" />
+
+        <SeekBar
+            android:id="@+id/seekSteps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="23" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchVoice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Speak replies automatically"
+            android:textColor="@color/apex_text" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchHaptics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Haptic feedback"
+            android:textColor="@color/apex_text" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="18dp"
+            android:text="Save configuration" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnClear"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Wipe credentials and history"
+            android:textColor="@color/apex_red" />
+
+        <TextView
+            style="@style/Apex.Text.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="Engine log" />
+
+        <TextView
+            android:id="@+id/tvLog"
+            style="@style/Apex.Text.Mono"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_glass_soft"
+            android:lineSpacingMultiplier="1.15"
+            android:padding="12dp"
+            android:textColor="@color/apex_text_dim"
+            android:textSize="10sp" />
+    </LinearLayout>
+</ScrollView>

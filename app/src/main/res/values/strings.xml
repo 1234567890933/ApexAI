@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Apex AI</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_toolkit">Toolkit</string>
+    <string name="hint_composer">Message Apex, or /tool to run a command…</string>
+    <string name="action_send">Send</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_new_chat">New chat</string>
+    <string name="action_agents">Agents</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_tools">Toolkit</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_speak">Read aloud</string>
+    <string name="action_retry">Retry</string>
+    <string name="empty_title">What should Apex build today?</string>
+    <string name="empty_subtitle">Pick an agent, then describe the outcome. Apex plans, calls tools and verifies its own work.</string>
+    <string name="label_thinking">Thinking</string>
+    <string name="label_tool_running">Running tool</string>
+    <string name="label_no_key">No API key yet — open Settings to connect a provider.</string>
+    <string name="cd_agent_avatar">Agent avatar</string>
+</resources>

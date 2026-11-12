@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path name="apex_files" path="." />
+    <cache-path name="apex_cache" path="." />
+    <external-files-path name="apex_external" path="." />
+</paths>
