@@ -74,7 +74,7 @@ class ToolAdapter(
             "http_probe" -> R.drawable.ic_tool_http
             "port_probe" -> R.drawable.ic_tool_port
             "url_parse" -> R.drawable.ic_tool_link
-            "apk_inspect" -> R.drawable.ic_tool_box
+            "apk_inspect" -> R.drawable.ic_tool_apk
             "manifest_peek" -> R.drawable.ic_tool_doc
             "dex_strings" -> R.drawable.ic_tool_quote
             "file_entropy" -> R.drawable.ic_tool_wave
