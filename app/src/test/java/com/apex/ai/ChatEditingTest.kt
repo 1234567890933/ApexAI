@@ -73,8 +73,11 @@ class ChatEditingTest {
 
         model.truncateFrom(2)
 
+        // Keeps everything before index 2: the first turn survives, the second
+        // user message (at index 2) is dropped so it can be re-sent.
         assertEquals(2, model.session.messages.size)
-        assertEquals("two", model.session.messages[0].text)
+        assertEquals("one", model.session.messages[0].text)
+        assertEquals("a", model.session.messages[1].text)
     }
 
     @Test
