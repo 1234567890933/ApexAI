@@ -28,13 +28,22 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install SDK packages
+      # The ubuntu runner ships the Android SDK. We only verify platform 34 is
+      # present and install it if the image changes — no third-party setup action,
+      # which is what broke the first build.
+      - name: Resolve Android SDK
         run: |
-          sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-          yes | sdkmanager --licenses || true
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "sdk root: $SDK_ROOT"
+          SDKMGR=$(ls -d "$SDK_ROOT"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1 || true)
+          if [ -n "$SDKMGR" ] && [ ! -d "$SDK_ROOT/platforms/android-34" ]; then
+            echo "installing platform 34"
+            yes | "$SDKMGR" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1 || true
+          fi
+          echo "platforms:"; ls "$SDK_ROOT/platforms" || true
+          echo "build-tools:"; ls "$SDK_ROOT/build-tools" || true
 
       - name: Generate signing keystore
         run: |
