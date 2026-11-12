@@ -1,6 +1,7 @@
 package com.apex.ai.core
 
 import android.content.Context
+import com.apex.ai.llm.HttpEngine
 import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
