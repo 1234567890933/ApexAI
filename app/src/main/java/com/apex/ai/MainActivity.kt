@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity() {
     private fun wireChat() {
         chatAdapter = ChatAdapter(
             onCopy = { text -> copyToClipboard(text) },
-            onSpeak = { text -> speech.speak(text) }
+            onSpeak = { text -> speech().speak(text) }
         )
         recyclerChat.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         recyclerChat.adapter = chatAdapter
