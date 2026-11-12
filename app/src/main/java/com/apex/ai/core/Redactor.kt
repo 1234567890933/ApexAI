@@ -18,7 +18,7 @@ object Redactor {
 
     fun scrub(input: String?): String {
         if (input.isNullOrEmpty()) return ""
-        var out = input
+        var out: String = input ?: return ""
         out = patterns[0].replace(out) { m ->
             val label = m.groupValues[1]
             "$label=$MASK"
