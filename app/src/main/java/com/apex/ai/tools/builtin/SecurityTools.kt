@@ -139,10 +139,13 @@ class DexStringsTool(private val sandbox: SandboxFs) : BaseTool() {
                 }
             }
         }
-        if (found.isEmpty()) return "No printable strings matched."
-        buildString {
-            appendLine("${found.size} string(s) extracted from $relative")
-            found.forEach { appendLine(it) }
+        if (found.isEmpty()) {
+            "No printable strings matched."
+        } else {
+            buildString {
+                appendLine("${found.size} string(s) extracted from $relative")
+                found.forEach { appendLine(it) }
+            }
         }
     }
 }
