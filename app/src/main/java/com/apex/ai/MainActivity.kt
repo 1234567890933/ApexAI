@@ -31,6 +31,7 @@ import com.apex.ai.agents.AgentSpec
 import com.apex.ai.core.AppContainer
 import com.apex.ai.core.ApexLog
 import com.apex.ai.core.ApexCrashHandler
+import com.apex.ai.core.BootTrace
 import com.apex.ai.core.DeviceProfile
 import com.apex.ai.core.StartupGuard
 import com.apex.ai.data.model.Session
@@ -109,8 +110,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        BootTrace.step(this, "main: onCreate entered")
 
         container = AppContainer.get(this)
+        BootTrace.step(this, "main: container ready")
 
         // If the previous launch died before drawing, do not repeat it — repair it.
         if (StartupGuard.crashedLastLaunch(this)) {
@@ -137,16 +140,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startChatUi() {
+        BootTrace.step(this, "main: inflating chat layout")
         setContentView(R.layout.activity_main)
+        BootTrace.step(this, "main: layout inflated")
 
         container.haptics.enabled = container.vault.hapticsEnabled
         voiceInput = VoiceInput(this)
 
         bindViews()
+        BootTrace.step(this, "main: views bound")
         wireChat()
         wireAgents()
         wireComposer()
         buildSuggestions()
+        BootTrace.step(this, "main: wiring complete")
 
         val agent = viewModel.catalog.byId(container.vault.selectedAgentId)
         applyAgent(agent, resetSession = false)
@@ -163,6 +170,7 @@ class MainActivity : AppCompatActivity() {
                         decor.viewTreeObserver.removeOnDrawListener(this)
                     }
                     StartupGuard.clear(this@MainActivity)
+                    BootTrace.ok(this@MainActivity)
                     ApexLog.d("Main", "first frame drawn")
                 }
             }

@@ -22,6 +22,7 @@ import com.apex.ai.R
 object StartupRecovery {
 
     fun show(activity: AppCompatActivity, crashText: String?, onReset: () -> Unit) {
+        val trace = com.apex.ai.core.BootTrace.lastCompletedRun(activity)
         val density = activity.resources.displayMetrics.density
         fun dp(value: Int) = (value * density).toInt()
 
@@ -70,7 +71,14 @@ object StartupRecovery {
         })
 
         root.addView(TextView(activity).apply {
-            text = crashText?.take(6000) ?: "No trace was recorded."
+            text = buildString {
+                if (!trace.isNullOrBlank()) {
+                    appendLine("Start-up trace (last run):")
+                    appendLine(trace.takeLast(1200))
+                    appendLine()
+                }
+                append(crashText?.take(5000) ?: "No exception was recorded — the process was killed.")
+            }
             textSize = 10f
             typeface = Typeface.MONOSPACE
             setTextIsSelectable(true)

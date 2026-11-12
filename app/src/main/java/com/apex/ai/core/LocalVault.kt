@@ -6,56 +6,85 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
 /**
- * Hardware-backed credential store.
+ * Credential store that never touches the Android Keystore on the main thread.
  *
- * Every accessor here is failure-tolerant on purpose. `EncryptedSharedPreferences`
- * can construct successfully and then throw on the first *read* when the Keystore
- * key has been invalidated — after an OS upgrade, a restore, or "clear credentials".
- * That exception used to surface on the main thread during `MainActivity.onCreate`,
- * which is why the app showed its splash and then vanished.
+ * Creating the Keystore master key is the single slowest call in this app — it
+ * can take a second on a healthy phone and can stall for many seconds on a device
+ * whose keystore is wedged. It used to run inside `Application.onCreate`, which
+ * meant the launcher showed the splash and then killed the process for being
+ * unresponsive: no crash dialog, no first frame, nothing to report.
  *
- * Now a read failure flips [isBroken], wipes the unreadable store and returns the
- * default, so start-up always completes. The user loses stored keys once; they get
- * a working app back.
+ * Now the store is built on a background thread via [warmUp]. Until it is ready,
+ * reads return their default and writes are queued, so the UI can come up
+ * immediately and nothing is lost.
  */
 class LocalVault(context: Context) {
 
     private val appContext = context.applicationContext
 
-    private val prefs: SharedPreferences
-    val isHardwareBacked: Boolean
+    @Volatile
+    private var prefs: SharedPreferences? = null
+
+    @Volatile
+    var isHardwareBacked: Boolean = true
+        private set
 
     @Volatile
     var isBroken: Boolean = false
         private set
 
-    init {
-        var store: SharedPreferences? = null
-        var backed = true
-        try {
-            val masterKey = MasterKey.Builder(appContext)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
-            store = EncryptedSharedPreferences.create(
-                appContext,
-                "apex_secure_vault",
-                masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
-        } catch (t: Throwable) {
-            ApexLog.e("LocalVault", "Keystore unavailable, degrading to private prefs", t)
-            backed = false
+    @Volatile
+    var isReady: Boolean = false
+        private set
+
+    private val pendingWrites = ArrayList<(SharedPreferences.Editor) -> Unit>(16)
+    private val lock = Any()
+
+    /** Call from a worker thread. Idempotent and safe to call twice. */
+    fun warmUp() {
+        if (isReady) return
+        synchronized(lock) {
+            if (isReady) return
+            val store = try {
+                val masterKey = MasterKey.Builder(appContext)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build()
+                EncryptedSharedPreferences.create(
+                    appContext,
+                    "apex_secure_vault",
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+            } catch (t: Throwable) {
+                ApexLog.e("LocalVault", "Keystore unavailable, degrading to private prefs", t)
+                isHardwareBacked = false
+                null
+            } ?: appContext.getSharedPreferences("apex_plain_vault", Context.MODE_PRIVATE)
+
+            prefs = store
+            isReady = true
+            flushPending(store)
         }
-        prefs = store ?: appContext.getSharedPreferences("apex_plain_vault", Context.MODE_PRIVATE)
-        isHardwareBacked = backed
+    }
+
+    private fun flushPending(store: SharedPreferences) {
+        val queued = synchronized(lock) {
+            val copy = pendingWrites.toList()
+            pendingWrites.clear()
+            copy
+        }
+        queued.forEach { block ->
+            runCatching { store.edit().also(block).apply() }
+        }
     }
 
     // ---- safe primitives ------------------------------------------------------
     private fun readString(key: String, fallback: String?): String? {
+        val store = prefs ?: return fallback
         if (isBroken) return fallback
         return try {
-            prefs.getString(key, fallback)
+            store.getString(key, fallback)
         } catch (t: Throwable) {
             ApexLog.e("LocalVault", "read failed for '$key' — resetting the store", t)
             resetStore()
@@ -64,60 +93,62 @@ class LocalVault(context: Context) {
     }
 
     private fun readFloat(key: String, fallback: Float): Float {
+        val store = prefs ?: return fallback
         if (isBroken) return fallback
         return try {
-            prefs.getFloat(key, fallback)
+            store.getFloat(key, fallback)
         } catch (t: Throwable) {
-            ApexLog.e("LocalVault", "float read failed for '$key'", t)
-            resetStore()
-            fallback
+            resetStore(); fallback
         }
     }
 
     private fun readInt(key: String, fallback: Int): Int {
+        val store = prefs ?: return fallback
         if (isBroken) return fallback
         return try {
-            prefs.getInt(key, fallback)
+            store.getInt(key, fallback)
         } catch (t: Throwable) {
-            ApexLog.e("LocalVault", "int read failed for '$key'", t)
-            resetStore()
-            fallback
+            resetStore(); fallback
         }
     }
 
     private fun readBool(key: String, fallback: Boolean): Boolean {
+        val store = prefs ?: return fallback
         if (isBroken) return fallback
         return try {
-            prefs.getBoolean(key, fallback)
+            store.getBoolean(key, fallback)
         } catch (t: Throwable) {
-            ApexLog.e("LocalVault", "bool read failed for '$key'", t)
-            resetStore()
-            fallback
+            resetStore(); fallback
         }
     }
 
     private fun write(block: (SharedPreferences.Editor) -> Unit) {
         if (isBroken) return
+        val store = prefs
+        if (store == null) {
+            // Store is still warming up: queue it, never block the caller.
+            synchronized(lock) {
+                if (pendingWrites.size < 64) pendingWrites.add(block)
+            }
+            return
+        }
         try {
-            val editor = prefs.edit()
-            block(editor)
-            editor.apply()
+            store.edit().also(block).apply()
         } catch (t: Throwable) {
             ApexLog.e("LocalVault", "write failed", t)
             resetStore()
         }
     }
 
-    /** Wipes the unreadable store so the next access starts clean. */
     private fun resetStore() {
         isBroken = true
-        runCatching { prefs.edit().clear().commit() }
+        runCatching { prefs?.edit()?.clear()?.commit() }
     }
 
     /** Used by the start-up recovery screen. */
     fun resetAll() {
         isBroken = false
-        runCatching { prefs.edit().clear().commit() }
+        runCatching { prefs?.edit()?.clear()?.commit() }
     }
 
     // ---- provider credentials -------------------------------------------------
@@ -174,7 +205,7 @@ class LocalVault(context: Context) {
 
     fun clearVault() {
         isBroken = false
-        runCatching { prefs.edit().clear().apply() }
+        runCatching { prefs?.edit()?.clear()?.apply() }
     }
 
     private fun keyFor(providerId: String) = "api_key_$providerId"
