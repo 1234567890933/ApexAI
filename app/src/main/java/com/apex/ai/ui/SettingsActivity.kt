@@ -246,7 +246,7 @@ class SettingsActivity : AppCompatActivity() {
         val lines = ApexLog.snapshot().takeLast(80)
         val header = buildString {
             appendLine("native: ${com.apex.ai.core.NativeBridge.versionLabel()}")
-            appendLine("packs: ${com.apex.ai.core.PackManager(this).installedCount()} file(s) installed")
+            appendLine("packs: ${com.apex.ai.core.PackManager(this@SettingsActivity).installedCount()} file(s) installed")
             appendLine("vault: ${if (container.vault.isReady) "ready" else "warming up"}")
         }
         tvLog.text = header + if (lines.isEmpty()) "No engine events yet." else lines.joinToString("\n")
