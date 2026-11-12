@@ -56,6 +56,15 @@ jobs:
       - name: Unit tests
         run: gradle test --no-daemon --stacktrace
 
+      - name: Test summary
+        if: always()
+        run: |
+          echo "unit test results"
+          find app/build/test-results -name "TEST-*.xml" -print0 2>/dev/null \
+            | xargs -0 -r grep -h "<testsuite " \
+            | sed -E 's/.*name="([^"]+)".*tests="([0-9]+)".*failures="([0-9]+)".*errors="([0-9]+)".*/\1  tests=\2 failures=\3 errors=\4/' \
+            || echo "no test results found"
+
       - name: Assemble debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
 

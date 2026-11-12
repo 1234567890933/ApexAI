@@ -49,7 +49,15 @@ object ApexCrashHandler {
             appendLine()
             append(writer.toString())
         }
-        File(app.filesDir, FILE).writeText(Redactor.scrub(report).take(MAX_CHARS))
+        val body = Redactor.scrub(report).take(MAX_CHARS)
+        runCatching { File(app.filesDir, FILE).writeText(body) }
+        // Also drop a copy in external app storage so a user without a PC can
+        // pull it with any file manager: Android/data/com.apex.ai/files/
+        runCatching {
+            val external = app.getExternalFilesDir(null) ?: return@runCatching
+            external.mkdirs()
+            File(external, "apex-crash.txt").writeText(body)
+        }
     }
 
     fun lastReport(context: Context): String? = runCatching {
