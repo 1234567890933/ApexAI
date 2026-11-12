@@ -16,10 +16,10 @@ data class StoredMessage(
 
 data class Session(
     val id: String = UUID.randomUUID().toString(),
-    val title: String = "New chat",
+    var title: String = "New chat",
     val agentId: String = "general",
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis(),
+    var updatedAt: Long = System.currentTimeMillis(),
     val messages: MutableList<StoredMessage> = mutableListOf()
 ) {
     fun preview(): String =
