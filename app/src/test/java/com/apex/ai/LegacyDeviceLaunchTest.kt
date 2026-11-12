@@ -4,8 +4,10 @@ import com.apex.ai.core.AppContainer
 import com.apex.ai.core.LocalVault
 import androidx.test.core.app.ApplicationProvider
 import android.app.Application
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,12 +41,16 @@ class Android10LaunchTest {
     fun vaultReadsNeverThrowOnAndroid10() {
         val context = ApplicationProvider.getApplicationContext<Application>()
         val vault = LocalVault(context)
-        assertNotNull(vault.getApiKey("gemini"))
+        // Nothing stored yet: a read must return null, never throw.
+        assertNull(vault.getApiKey("gemini"))
         assertNotNull(vault.selectedAgentId)
         assertTrue(vault.maxAgentSteps >= 1)
+
+        // A round-trip through whichever store the device gave us.
         vault.saveApiKey("gemini", "test-key")
+        assertEquals("test-key", vault.getApiKey("gemini"))
         vault.customSystemPrompt = "be terse"
-        assertNotNull(vault.customSystemPrompt)
+        assertEquals("be terse", vault.customSystemPrompt)
         vault.clearVault()
     }
 }
