@@ -95,6 +95,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         return found
     }
 
+    fun deleteSession(sessionId: String) {
+        container.sessions.delete(sessionId)
+        if (session.id == sessionId) {
+            session = Session(agentId = container.vault.selectedAgentId)
+        }
+    }
+
     fun transcriptText(): String = buildString {
         appendLine("# ${session.title}")
         appendLine()

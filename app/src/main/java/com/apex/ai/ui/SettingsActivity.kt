@@ -46,6 +46,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var advancedPanel: View
     private lateinit var inputSystemPrompt: EditText
     private lateinit var tvCrash: TextView
+    private lateinit var tvPacks: TextView
 
     private var selectedProvider: String = ProviderIds.DEFAULT
 
@@ -62,6 +63,7 @@ class SettingsActivity : AppCompatActivity() {
         wire()
         refreshAdvanced()
         renderCrash()
+        renderPacks()
     }
 
     private fun bind() {
@@ -83,6 +85,7 @@ class SettingsActivity : AppCompatActivity() {
         advancedPanel = findViewById(R.id.advancedPanel)
         inputSystemPrompt = findViewById(R.id.inputSystemPrompt)
         tvCrash = findViewById(R.id.tvCrash)
+        tvPacks = findViewById(R.id.tvPacks)
 
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
     }
@@ -167,6 +170,10 @@ class SettingsActivity : AppCompatActivity() {
             confirmWipe()
         }
         btnAdvancedUnlock.setOnClickListener { toggleAdvanced() }
+        findViewById<com.google.android.material.button.MaterialButton>(R.id.btnManagePacks)
+            .setOnClickListener {
+                startActivity(android.content.Intent(this, SetupActivity::class.java))
+            }
         findViewById<com.google.android.material.button.MaterialButton>(R.id.btnClearCrash)
             .setOnClickListener {
                 ApexCrashHandler.clear(this)
@@ -222,6 +229,15 @@ class SettingsActivity : AppCompatActivity() {
         btnAdvancedUnlock.text = if (unlocked) "Lock advanced mode" else "Unlock advanced mode"
         if (unlocked) {
             inputSystemPrompt.setText(container.vault.customSystemPrompt)
+        }
+    }
+
+    private fun renderPacks() {
+        val packs = com.apex.ai.core.PackManager(this)
+        tvPacks.text = if (packs.isInstalled()) {
+            "Installed · ${packs.installedCount()} file(s) · ${packs.installedSizeBytes() / 1024} KB"
+        } else {
+            "Not installed. The prompt library and tool guide are a single tap away."
         }
     }
 
@@ -297,6 +313,7 @@ class SettingsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         renderLog()
+        renderPacks()
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()

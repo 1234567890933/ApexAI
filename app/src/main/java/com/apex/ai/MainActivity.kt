@@ -222,7 +222,10 @@ class MainActivity : AppCompatActivity() {
             refreshHistory()
             drawer.openDrawer(GravityCompat.START)
         }
-        historyAdapter = SessionAdapter { session -> openSession(session) }
+        historyAdapter = SessionAdapter(
+            onOpen = { session -> openSession(session) },
+            onDelete = { session -> confirmDeleteSession(session) }
+        )
         recyclerHistory.layoutManager = LinearLayoutManager(this)
         recyclerHistory.adapter = historyAdapter
         recyclerHistory.setItemViewCacheSize(6)
@@ -518,6 +521,23 @@ class MainActivity : AppCompatActivity() {
         container.haptics.tap(recyclerChat)
     }
 
+    private fun confirmDeleteSession(session: Session) {
+        androidx.appcompat.app.AlertDialog.Builder(this, R.style.Apex_Dialog)
+            .setTitle("Delete this chat?")
+            .setMessage(session.title.ifBlank { "Untitled" })
+            .setPositiveButton("Delete") { _, _ ->
+                viewModel.deleteSession(session.id)
+                refreshHistory()
+                if (viewModel.session.messages.isEmpty()) {
+                    chatAdapter.clear()
+                    emptyState.visibility = View.VISIBLE
+                }
+                container.haptics.warn()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun exportChat() {
         val transcript = viewModel.transcriptText()
         if (viewModel.session.messages.isEmpty()) {
@@ -538,6 +558,33 @@ class MainActivity : AppCompatActivity() {
         row.removeAllViews()
         val prompts = mutableListOf<String>()
         val packManager = com.apex.ai.core.PackManager(this)
+
+        // Installed packs are not decoration: the prompt library becomes the
+        // suggestion row, so the download changes what the app offers.
+        if (packManager.isInstalled()) {
+            packManager.prompts().take(4).forEach { template ->
+                val chip = TextView(this)
+                chip.text = template.title
+                chip.setTextColor(ContextCompat.getColor(this, R.color.apex_text_dim))
+                chip.textSize = 12f
+                chip.setBackgroundResource(R.drawable.bg_chip)
+                chip.setPadding(dp(14), dp(9), dp(14), dp(9))
+                val params = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                params.marginEnd = dp(8)
+                chip.layoutParams = params
+                chip.setOnClickListener {
+                    container.haptics.tap(it)
+                    inputPrompt.setText(template.prompt)
+                    inputPrompt.setSelection(inputPrompt.text.length)
+                }
+                Motion.attachPressScale(chip, 0.94f)
+                row.addView(chip)
+            }
+        }
+
         if (!packManager.isInstalled()) {
             // The one-tap path: this chip is the whole installer.
             val chip = TextView(this)
@@ -559,7 +606,7 @@ class MainActivity : AppCompatActivity() {
             Motion.attachPressScale(chip, 0.94f)
             row.addView(chip)
         }
-        prompts += listOf(
+        if (!packManager.isInstalled()) prompts += listOf(
             "Plan a 7-day Hampi trip on ₹30,000",
             "Review this Kotlin snippet for leaks",
             "Explain SSE streaming in five lines",

@@ -12,7 +12,8 @@ import com.apex.ai.ui.motion.Motion
 
 class SessionAdapter(
     private var sessions: List<Session> = emptyList(),
-    private val onOpen: (Session) -> Unit
+    private val onOpen: (Session) -> Unit,
+    private val onDelete: (Session) -> Unit = {}
 ) : RecyclerView.Adapter<SessionAdapter.Holder>() {
 
     fun update(newSessions: List<Session>) {
@@ -26,14 +27,14 @@ class SessionAdapter(
         Holder(LayoutInflater.from(parent.context).inflate(R.layout.item_session, parent, false))
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
-        holder.bind(sessions[position], onOpen)
+        holder.bind(sessions[position], onOpen, onDelete)
     }
 
     class Holder(view: View) : RecyclerView.ViewHolder(view) {
         private val title: TextView = view.findViewById(R.id.tvTitle)
         private val preview: TextView = view.findViewById(R.id.tvPreview)
 
-        fun bind(session: Session, onOpen: (Session) -> Unit) {
+        fun bind(session: Session, onOpen: (Session) -> Unit, onDelete: (Session) -> Unit) {
             val context = itemView.context
             title.text = session.title.ifBlank { "Untitled" }
             val when_ = DateUtils.getRelativeTimeSpanString(
@@ -45,6 +46,10 @@ class SessionAdapter(
             itemView.setOnClickListener {
                 Motion.pulse(it)
                 onOpen(session)
+            }
+            itemView.setOnLongClickListener {
+                onDelete(session)
+                true
             }
             itemView.alpha = 0.9f
             title.setTextColor(
