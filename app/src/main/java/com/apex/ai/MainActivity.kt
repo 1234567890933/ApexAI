@@ -10,6 +10,7 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageButton
@@ -29,12 +30,15 @@ import com.apex.ai.agents.AgentEvent
 import com.apex.ai.agents.AgentSpec
 import com.apex.ai.core.AppContainer
 import com.apex.ai.core.ApexLog
+import com.apex.ai.core.ApexCrashHandler
 import com.apex.ai.core.DeviceProfile
+import com.apex.ai.core.StartupGuard
 import com.apex.ai.data.model.Session
 import com.apex.ai.speech.SpeechEngine
 import com.apex.ai.speech.VoiceInput
 import com.apex.ai.ui.ChatViewModel
 import com.apex.ai.ui.SettingsActivity
+import com.apex.ai.ui.StartupRecovery
 import com.apex.ai.ui.ToolkitActivity
 import com.apex.ai.ui.chat.AgentAdapter
 import com.apex.ai.ui.chat.AgentPickerSheet
@@ -67,7 +71,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var agentAdapter: AgentAdapter
     private lateinit var historyAdapter: SessionAdapter
     private lateinit var recyclerHistory: RecyclerView
-    private lateinit var speech: SpeechEngine
+    private var speechEngine: SpeechEngine? = null
+
+    /** Built on first use: binding to the TTS service must not sit on the
+     *  start-up path, where a slow engine can stall the first frame. */
+    private fun speech(): SpeechEngine =
+        speechEngine ?: SpeechEngine(this).also { speechEngine = it }
     private lateinit var voiceInput: VoiceInput
     private lateinit var btnMic: ImageButton
 
@@ -79,6 +88,20 @@ class MainActivity : AppCompatActivity() {
 
     private val flushRunnable = Runnable { flushTokens() }
 
+    private var caretVisible = true
+    private val caretRunnable = object : Runnable {
+        override fun run() {
+            if (streamingIndex < 0) return
+            caretVisible = !caretVisible
+            val item = chatAdapter.itemAt(streamingIndex)
+            if (item != null) {
+                item.streaming = caretVisible
+                chatAdapter.refresh(streamingIndex)
+            }
+            main.postDelayed(this, 480L)
+        }
+    }
+
     private val micPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) startDictation() else toast(getString(R.string.msg_mic_denied))
@@ -86,11 +109,37 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
         container = AppContainer.get(this)
+
+        // If the previous launch died before drawing, do not repeat it — repair it.
+        if (StartupGuard.crashedLastLaunch(this)) {
+            ApexLog.w("Main", "previous launch never reached its first frame")
+            StartupRecovery.show(this, ApexCrashHandler.lastReport(this)) {
+                runCatching {
+                    container.vault.resetAll()
+                    container.sessions.clear()
+                    ApexCrashHandler.clear(this)
+                }
+                StartupGuard.clear(this)
+                recreate()
+            }
+            return
+        }
+
+        StartupGuard.begin(this)
+        try {
+            startChatUi()
+        } catch (t: Throwable) {
+            ApexLog.e("Main", "start-up failed", t)
+            runCatching { StartupRecovery.show(this, t.stackTraceToString()) { finish() } }
+        }
+    }
+
+    private fun startChatUi() {
+        setContentView(R.layout.activity_main)
+
         container.haptics.enabled = container.vault.hapticsEnabled
-        speech = SpeechEngine(this)
         voiceInput = VoiceInput(this)
 
         bindViews()
@@ -102,6 +151,22 @@ class MainActivity : AppCompatActivity() {
         val agent = viewModel.catalog.byId(container.vault.selectedAgentId)
         applyAgent(agent, resetSession = false)
         ApexLog.d("Main", "ready · ${container.tools.size()} tools · agent=${agent.id}")
+        clearStartupMarkerAfterFirstFrame()
+    }
+
+    private fun clearStartupMarkerAfterFirstFrame() {
+        val decor = window.decorView
+        decor.viewTreeObserver.addOnDrawListener(
+            object : ViewTreeObserver.OnDrawListener {
+                override fun onDraw() {
+                    if (decor.viewTreeObserver.isAlive) {
+                        decor.viewTreeObserver.removeOnDrawListener(this)
+                    }
+                    StartupGuard.clear(this@MainActivity)
+                    ApexLog.d("Main", "first frame drawn")
+                }
+            }
+        )
     }
 
     // ---------------------------------------------------------------- binding
@@ -300,6 +365,7 @@ class MainActivity : AppCompatActivity() {
         )
         scrollToEnd()
         setStreamingUi(true)
+        startCaretBlink()
         container.haptics.confirm()
 
         streamJob = lifecycleScope.launch {
@@ -374,8 +440,15 @@ class MainActivity : AppCompatActivity() {
         scrollToEnd()
     }
 
+    private fun startCaretBlink() {
+        main.removeCallbacks(caretRunnable)
+        caretVisible = true
+        main.postDelayed(caretRunnable, 480L)
+    }
+
     private fun finishStreaming() {
         main.removeCallbacks(flushRunnable)
+        main.removeCallbacks(caretRunnable)
         flushTokens()
         val index = streamingIndex
         if (index >= 0) {
@@ -385,7 +458,7 @@ class MainActivity : AppCompatActivity() {
                 chatAdapter.refresh(index)
                 viewModel.recordAssistant(item.agentName, item.text)
                 if (container.vault.voiceEnabled && item.text.isNotBlank()) {
-                    speech.speak(item.text)
+                    speech().speak(item.text)
                 }
             }
         }
@@ -504,7 +577,8 @@ class MainActivity : AppCompatActivity() {
         main.removeCallbacks(flushRunnable)
         streamJob?.cancel()
         runCatching { voiceInput.destroy() }
-        speech.shutdown()
+        speechEngine?.shutdown()
+        speechEngine = null
         super.onDestroy()
     }
 }

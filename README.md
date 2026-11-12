@@ -39,6 +39,7 @@ Keystore, streams tokens over SSE, and lets the model call tools on the device.
 | Low-end | `DeviceProfile` detects low-RAM / 4-core devices and drops shaders, springs and cache sizes |
 | Stability | SSE retry with backoff, tool-call loop guard, bounded stream buffer, capped transcripts |
 | History | Recent-chat list in the drawer, reopen any session, export a chat as Markdown |
+| Compatibility | Verified at API 24, API 29 (Android 10) and API 33 in CI |
 
 ## Agent presets
 
@@ -126,6 +127,26 @@ so cancellation is just cancelling the collector.
   outside `filesDir/sandbox`.
 - Backups exclude the vault (`data_extraction_rules.xml`).
 - No analytics, no telemetry, no third-party SDKs.
+
+## Start-up reliability
+
+The app once showed its splash and then vanished. The cause was in the credential
+store: `EncryptedSharedPreferences` can construct fine and then throw on the first
+*read* when the Keystore key has been invalidated (OS upgrade, restore, cleared
+credentials). That read happened on the main thread inside `onCreate`.
+
+Three changes make that class of failure impossible:
+
+1. Every vault accessor is wrapped and self-healing. A failed read wipes the
+   unreadable store and returns the default, so start-up always completes.
+2. `StartupGuard` writes a marker as the first statement of `onCreate` and clears
+   it on the first draw. If the marker survives, the next launch opens a recovery
+   screen with the trace and a one-tap repair instead of dying again.
+3. TTS binding is deferred to first use; nothing that talks to a system service
+   sits on the start-up path any more.
+
+CI drives all three activities through `create → start → resume → destroy` on
+API 24, API 29 (Android 10) and API 33.
 
 ## Performance on cheap hardware
 

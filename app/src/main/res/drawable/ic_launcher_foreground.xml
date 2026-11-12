@@ -3,17 +3,34 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- hex frame: the "container" the mark lives in -->
     <path
-        android:pathData="M54,26 L74,62 L64,62 L60,54 L48,54 L44,62 L34,62 Z"
-        android:fillColor="#FF7C5CFF" />
+        android:pathData="M54,26 L77,39.5 L77,66.5 L54,80 L31,66.5 L31,39.5 Z"
+        android:strokeColor="#4DFFFFFF"
+        android:strokeWidth="1.6"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent" />
+
+    <!-- the A: two clean strokes, no tick marks -->
     <path
-        android:pathData="M54,38 L58.6,48 L49.4,48 Z"
-        android:fillColor="#FF22D3EE" />
+        android:pathData="M40,73 L54,35 L68,73"
+        android:strokeColor="#FF7C5CFF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent" />
+
+    <!-- crossbar, in the accent colour -->
     <path
-        android:pathData="M54,68 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"
+        android:pathData="M46,62 L62,62"
+        android:strokeColor="#FF22D3EE"
+        android:strokeWidth="5.5"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent" />
+
+    <!-- the node -->
+    <path
+        android:pathData="M54,88 m-3.4,0 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0"
         android:fillColor="#FFF472B6" />
-    <path
-        android:pathData="M54,18 L54,26 M54,68 L54,90 M30,54 L38,54 M70,54 L78,54"
-        android:strokeColor="#66FFFFFF"
-        android:strokeWidth="1.6" />
 </vector>

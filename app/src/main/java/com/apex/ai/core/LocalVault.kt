@@ -8,11 +8,15 @@ import androidx.security.crypto.MasterKey
 /**
  * Hardware-backed credential store.
  *
- * Primary path: AES-256-GCM MasterKey in the Android Keystore, wrapped by
- * [EncryptedSharedPreferences] (AES-256-SIV for keys, AES-256-GCM for values).
- * Fallback path: if the Keystore rejects the key (rare OEM keystore corruption),
- * we degrade to a private-mode preference file rather than crashing the app —
- * flagged so the UI can warn the user.
+ * Every accessor here is failure-tolerant on purpose. `EncryptedSharedPreferences`
+ * can construct successfully and then throw on the first *read* when the Keystore
+ * key has been invalidated — after an OS upgrade, a restore, or "clear credentials".
+ * That exception used to surface on the main thread during `MainActivity.onCreate`,
+ * which is why the app showed its splash and then vanished.
+ *
+ * Now a read failure flips [isBroken], wipes the unreadable store and returns the
+ * default, so start-up always completes. The user loses stored keys once; they get
+ * a working app back.
  */
 class LocalVault(context: Context) {
 
@@ -20,6 +24,10 @@ class LocalVault(context: Context) {
 
     private val prefs: SharedPreferences
     val isHardwareBacked: Boolean
+
+    @Volatile
+    var isBroken: Boolean = false
+        private set
 
     init {
         var store: SharedPreferences? = null
@@ -43,17 +51,83 @@ class LocalVault(context: Context) {
         isHardwareBacked = backed
     }
 
-    // ---- provider credentials -------------------------------------------------
-    fun saveApiKey(providerId: String, apiKey: String) {
-        prefs.edit().putString(keyFor(providerId), apiKey.trim()).apply()
+    // ---- safe primitives ------------------------------------------------------
+    private fun readString(key: String, fallback: String?): String? {
+        if (isBroken) return fallback
+        return try {
+            prefs.getString(key, fallback)
+        } catch (t: Throwable) {
+            ApexLog.e("LocalVault", "read failed for '$key' — resetting the store", t)
+            resetStore()
+            fallback
+        }
     }
+
+    private fun readFloat(key: String, fallback: Float): Float {
+        if (isBroken) return fallback
+        return try {
+            prefs.getFloat(key, fallback)
+        } catch (t: Throwable) {
+            ApexLog.e("LocalVault", "float read failed for '$key'", t)
+            resetStore()
+            fallback
+        }
+    }
+
+    private fun readInt(key: String, fallback: Int): Int {
+        if (isBroken) return fallback
+        return try {
+            prefs.getInt(key, fallback)
+        } catch (t: Throwable) {
+            ApexLog.e("LocalVault", "int read failed for '$key'", t)
+            resetStore()
+            fallback
+        }
+    }
+
+    private fun readBool(key: String, fallback: Boolean): Boolean {
+        if (isBroken) return fallback
+        return try {
+            prefs.getBoolean(key, fallback)
+        } catch (t: Throwable) {
+            ApexLog.e("LocalVault", "bool read failed for '$key'", t)
+            resetStore()
+            fallback
+        }
+    }
+
+    private fun write(block: (SharedPreferences.Editor) -> Unit) {
+        if (isBroken) return
+        try {
+            val editor = prefs.edit()
+            block(editor)
+            editor.apply()
+        } catch (t: Throwable) {
+            ApexLog.e("LocalVault", "write failed", t)
+            resetStore()
+        }
+    }
+
+    /** Wipes the unreadable store so the next access starts clean. */
+    private fun resetStore() {
+        isBroken = true
+        runCatching { prefs.edit().clear().commit() }
+    }
+
+    /** Used by the start-up recovery screen. */
+    fun resetAll() {
+        isBroken = false
+        runCatching { prefs.edit().clear().commit() }
+    }
+
+    // ---- provider credentials -------------------------------------------------
+    fun saveApiKey(providerId: String, apiKey: String) =
+        write { it.putString(keyFor(providerId), apiKey.trim()) }
 
     fun getApiKey(providerId: String): String? =
-        prefs.getString(keyFor(providerId), null)?.takeIf { it.isNotBlank() }
+        readString(keyFor(providerId), null)?.takeIf { it.isNotBlank() }
 
-    fun clearApiKey(providerId: String) {
-        prefs.edit().remove(keyFor(providerId)).apply()
-    }
+    fun clearApiKey(providerId: String) = write { it.remove(keyFor(providerId)) }
 
     /** Legacy single-slot accessor kept so existing installs keep working. */
     fun saveApiKey(apiKey: String) = saveApiKey(ProviderIds.DEFAULT, apiKey)
@@ -62,44 +136,45 @@ class LocalVault(context: Context) {
 
     // ---- non-secret preferences ----------------------------------------------
     var providerId: String
-        get() = prefs.getString("provider_id", ProviderIds.DEFAULT) ?: ProviderIds.DEFAULT
-        set(value) = prefs.edit().putString("provider_id", value).apply()
+        get() = readString("provider_id", ProviderIds.DEFAULT) ?: ProviderIds.DEFAULT
+        set(value) = write { it.putString("provider_id", value) }
 
     var modelId: String
-        get() = prefs.getString("model_id", "") ?: ""
-        set(value) = prefs.edit().putString("model_id", value).apply()
+        get() = readString("model_id", "") ?: ""
+        set(value) = write { it.putString("model_id", value) }
 
     var baseUrl: String
-        get() = prefs.getString("base_url", "") ?: ""
-        set(value) = prefs.edit().putString("base_url", value.trim()).apply()
+        get() = readString("base_url", "") ?: ""
+        set(value) = write { it.putString("base_url", value.trim()) }
 
     var selectedAgentId: String
-        get() = prefs.getString("agent_id", "general") ?: "general"
-        set(value) = prefs.edit().putString("agent_id", value).apply()
+        get() = readString("agent_id", "general") ?: "general"
+        set(value) = write { it.putString("agent_id", value) }
 
     var temperature: Float
-        get() = prefs.getFloat("temperature", 0.7f)
-        set(value) = prefs.edit().putFloat("temperature", value.coerceIn(0f, 2f)).apply()
+        get() = readFloat("temperature", 0.7f)
+        set(value) = write { it.putFloat("temperature", value.coerceIn(0f, 2f)) }
 
     var voiceEnabled: Boolean
-        get() = prefs.getBoolean("voice_enabled", false)
-        set(value) = prefs.edit().putBoolean("voice_enabled", value).apply()
+        get() = readBool("voice_enabled", false)
+        set(value) = write { it.putBoolean("voice_enabled", value) }
 
     var hapticsEnabled: Boolean
-        get() = prefs.getBoolean("haptics_enabled", true)
-        set(value) = prefs.edit().putBoolean("haptics_enabled", value).apply()
+        get() = readBool("haptics_enabled", true)
+        set(value) = write { it.putBoolean("haptics_enabled", value) }
 
     var maxAgentSteps: Int
-        get() = prefs.getInt("max_agent_steps", 8)
-        set(value) = prefs.edit().putInt("max_agent_steps", value.coerceIn(1, 24)).apply()
+        get() = readInt("max_agent_steps", 8)
+        set(value) = write { it.putInt("max_agent_steps", value.coerceIn(1, 24)) }
 
     /** Only editable while the Advanced section is unlocked. */
     var customSystemPrompt: String
-        get() = prefs.getString("custom_system_prompt", "") ?: ""
-        set(value) = prefs.edit().putString("custom_system_prompt", value.trim()).apply()
+        get() = readString("custom_system_prompt", "") ?: ""
+        set(value) = write { it.putString("custom_system_prompt", value.trim()) }
 
     fun clearVault() {
-        prefs.edit().clear().apply()
+        isBroken = false
+        runCatching { prefs.edit().clear().apply() }
     }
 
     private fun keyFor(providerId: String) = "api_key_$providerId"
