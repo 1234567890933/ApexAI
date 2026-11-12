@@ -66,6 +66,16 @@
                 android:orientation="horizontal">
 
                 <ImageButton
+                    android:id="@+id/btnRetry"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_icon_ripple"
+                    android:contentDescription="@string/action_retry"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_refresh"
+                    app:tint="@color/apex_text_faint" />
+
+                <ImageButton
                     android:id="@+id/btnCopy"
                     android:layout_width="38dp"
                     android:layout_height="38dp"

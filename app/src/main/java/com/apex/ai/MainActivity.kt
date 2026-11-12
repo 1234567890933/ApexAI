@@ -201,7 +201,9 @@ class MainActivity : AppCompatActivity() {
     private fun wireChat() {
         chatAdapter = ChatAdapter(
             onCopy = { text -> copyToClipboard(text) },
-            onSpeak = { text -> speech().speak(text) }
+            onSpeak = { text -> speech().speak(text) },
+            onRegenerate = { position -> regenerate(position) },
+            onEditUser = { position -> promptEditUserMessage(position) }
         )
         recyclerChat.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         recyclerChat.adapter = chatAdapter
@@ -233,6 +235,10 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.btnExportChat).setOnClickListener {
             container.haptics.tap(it)
             exportChat()
+        }
+        findViewById<TextView>(R.id.btnCopyChat).setOnClickListener {
+            container.haptics.tap(it)
+            copyChat()
         }
 
         tvAgentName.setOnLongClickListener {
@@ -351,7 +357,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ---------------------------------------------------------------- sending
-    private fun sendPrompt(raw: String) {
+    private fun sendPrompt(raw: String, addUserBubble: Boolean = true) {
         val prompt = raw.trim()
         val agent = currentAgent ?: return
         if (prompt.isEmpty() || streamJob?.isActive == true) return
@@ -368,7 +374,7 @@ class MainActivity : AppCompatActivity() {
 
         inputPrompt.setText("")
         emptyState.visibility = View.GONE
-        chatAdapter.add(ChatItem(kind = RowKind.USER, text = prompt))
+        if (addUserBubble) chatAdapter.add(ChatItem(kind = RowKind.USER, text = prompt))
         streamingIndex = chatAdapter.add(
             ChatItem(
                 kind = RowKind.AGENT,
@@ -384,7 +390,8 @@ class MainActivity : AppCompatActivity() {
         container.haptics.confirm()
 
         streamJob = lifecycleScope.launch {
-            viewModel.send(agent.id, prompt).collect { event -> handleEvent(event) }
+            viewModel.send(agent.id, prompt, recordUser = addUserBubble)
+                .collect { event -> handleEvent(event) }
         }
     }
 
@@ -519,6 +526,82 @@ class MainActivity : AppCompatActivity() {
         drawer.closeDrawer(GravityCompat.START)
         scrollToEnd()
         container.haptics.tap(recyclerChat)
+    }
+
+    // ---------------------------------------------------------------- step 2
+    /** Rebuilds the visible transcript from the stored session. */
+    private fun renderFromSession() {
+        val agent = currentAgent ?: return
+        val items = viewModel.session.messages.map { it.toChatItem(agent.name, agent.glyph) }
+        chatAdapter.replaceAll(items)
+        emptyState.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+        scrollToEnd()
+    }
+
+    private fun regenerate(position: Int) {
+        if (streamJob?.isActive == true) return
+        val prompt = viewModel.lastUserPrompt()
+        if (prompt.isNullOrBlank()) {
+            toast("Nothing to regenerate yet")
+            return
+        }
+        container.haptics.tap(recyclerChat)
+        viewModel.dropTrailingAssistant()
+        renderFromSession()
+        sendPrompt(prompt, addUserBubble = false)
+    }
+
+    private fun promptEditUserMessage(position: Int) {
+        if (streamJob?.isActive == true) {
+            toast("Wait for this reply to finish")
+            return
+        }
+        val item = chatAdapter.itemAt(position) ?: return
+        val ordinal = chatAdapter.userOrdinalAt(position)
+
+        val field = EditText(this).apply {
+            setText(item.text)
+            setSelection(item.text.length)
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            minLines = 3
+            gravity = android.view.Gravity.TOP or android.view.Gravity.START
+            setPadding(dp(18), dp(14), dp(18), dp(14))
+            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.apex_text))
+            setHintTextColor(ContextCompat.getColor(this@MainActivity, R.color.apex_text_faint))
+            hint = "Edit your message"
+        }
+
+        androidx.appcompat.app.AlertDialog.Builder(this, R.style.Apex_Dialog)
+            .setTitle("Edit and resend")
+            .setView(field)
+            .setPositiveButton("Send") { _, _ ->
+                val newText = field.text.toString().trim()
+                if (newText.isEmpty()) return@setPositiveButton
+                val sessionIndex = viewModel.userMessageIndex(ordinal)
+                if (sessionIndex == null) {
+                    toast("Could not locate that message")
+                    return@setPositiveButton
+                }
+                viewModel.truncateFrom(sessionIndex)
+                renderFromSession()
+                sendPrompt(newText)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun copyChat() {
+        if (viewModel.session.messages.isEmpty()) {
+            toast("Nothing to copy yet")
+            return
+        }
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        clipboard.setPrimaryClip(
+            android.content.ClipData.newPlainText("Apex AI", viewModel.transcriptText())
+        )
+        container.haptics.tap(recyclerChat)
+        toast("Chat copied")
     }
 
     private fun confirmDeleteSession(session: Session) {

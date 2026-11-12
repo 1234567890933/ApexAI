@@ -55,7 +55,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun send(agentId: String, prompt: String): Flow<AgentEvent> {
+    fun send(agentId: String, prompt: String, recordUser: Boolean = true): Flow<AgentEvent> {
         val history = session.messages
             .filter { it.kind == MessageKind.USER.name || it.kind == MessageKind.ASSISTANT.name }
             .takeLast(12)
@@ -68,8 +68,44 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         if (session.messages.isEmpty()) {
             session.title = prompt.take(42).replace('\n', ' ')
         }
-        session.messages.add(StoredMessage(kind = MessageKind.USER.name, text = prompt))
+        if (recordUser) {
+            session.messages.add(StoredMessage(kind = MessageKind.USER.name, text = prompt))
+        }
         return orchestrator().stream(agentId, prompt, history)
+    }
+
+    // ---- editing and regeneration ------------------------------------------
+    fun lastUserPrompt(): String? =
+        session.messages.lastOrNull { it.kind == MessageKind.USER.name }?.text
+
+    /** Removes the reply at the end so it can be regenerated. */
+    fun dropTrailingAssistant() {
+        while (session.messages.isNotEmpty() &&
+            session.messages.last().kind != MessageKind.USER.name
+        ) {
+            session.messages.removeAt(session.messages.size - 1)
+        }
+    }
+
+    /** 1-based ordinal of a user bubble to its index in the transcript. */
+    fun userMessageIndex(ordinal: Int): Int? {
+        if (ordinal <= 0) return null
+        var seen = 0
+        session.messages.forEachIndexed { index, message ->
+            if (message.kind == MessageKind.USER.name) {
+                seen++
+                if (seen == ordinal) return index
+            }
+        }
+        return null
+    }
+
+    /** Drops everything from [index] onward, keeping what came before. */
+    fun truncateFrom(index: Int) {
+        if (index < 0 || index >= session.messages.size) return
+        val kept = session.messages.take(index)
+        session.messages.clear()
+        session.messages.addAll(kept)
     }
 
     fun recordAssistant(agentName: String, text: String) {

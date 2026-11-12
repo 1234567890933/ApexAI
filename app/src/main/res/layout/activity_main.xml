@@ -256,6 +256,19 @@
             android:text="Export this chat"
             android:textColor="@color/apex_cyan" />
 
+        <TextView
+            android:id="@+id/btnCopyChat"
+            style="@style/Apex.Text.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_chip"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="Copy this chat"
+            android:textColor="@color/apex_text_dim" />
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"

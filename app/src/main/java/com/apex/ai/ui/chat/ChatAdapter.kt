@@ -12,7 +12,9 @@ import com.apex.ai.ui.motion.Motion
 
 class ChatAdapter(
     private val onCopy: (String) -> Unit,
-    private val onSpeak: (String) -> Unit
+    private val onSpeak: (String) -> Unit,
+    private val onRegenerate: (Int) -> Unit = {},
+    private val onEditUser: (Int) -> Unit = {}
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items = mutableListOf<ChatItem>()
@@ -42,6 +44,18 @@ class ChatAdapter(
 
     fun isEmpty(): Boolean = items.isEmpty()
 
+    fun lastAgentIndex(): Int = items.indexOfLast { it.kind == RowKind.AGENT }
+
+    /** How many user bubbles exist up to and including [position]. */
+    fun userOrdinalAt(position: Int): Int {
+        var ordinal = 0
+        val limit = position.coerceAtMost(items.size - 1)
+        for (index in 0..limit) {
+            if (index >= 0 && items[index].kind == RowKind.USER) ordinal++
+        }
+        return ordinal
+    }
+
     override fun getItemCount(): Int = items.size
 
     override fun getItemViewType(position: Int): Int = items[position].kind.ordinal
@@ -58,8 +72,8 @@ class ChatAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = items[position]
         when (holder) {
-            is UserHolder -> holder.bind(item)
-            is AgentHolder -> holder.bind(item, onCopy, onSpeak)
+            is UserHolder -> holder.bind(item, position, onEditUser)
+            is AgentHolder -> holder.bind(item, position, onCopy, onSpeak, onRegenerate)
             is ToolHolder -> holder.bind(item)
         }
         if (holder.itemView.tag == null) {
@@ -70,8 +84,12 @@ class ChatAdapter(
 
     private class UserHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val body: TextView = view.findViewById(R.id.tvBody)
-        fun bind(item: ChatItem) {
+        fun bind(item: ChatItem, position: Int, onEditUser: (Int) -> Unit) {
             body.text = item.text
+            body.setOnLongClickListener {
+                onEditUser(position)
+                true
+            }
         }
     }
 
@@ -81,8 +99,15 @@ class ChatAdapter(
         private val avatar: TextView = view.findViewById(R.id.tvAvatar)
         private val copy: ImageButton = view.findViewById(R.id.btnCopy)
         private val speak: ImageButton = view.findViewById(R.id.btnSpeak)
+        private val retry: ImageButton = view.findViewById(R.id.btnRetry)
 
-        fun bind(item: ChatItem, onCopy: (String) -> Unit, onSpeak: (String) -> Unit) {
+        fun bind(
+            item: ChatItem,
+            position: Int,
+            onCopy: (String) -> Unit,
+            onSpeak: (String) -> Unit,
+            onRegenerate: (Int) -> Unit
+        ) {
             val context = itemView.context
             name.text = item.agentName
             avatar.text = item.glyph
@@ -90,8 +115,15 @@ class ChatAdapter(
             body.setTextColor(ContextCompat.getColor(context, R.color.apex_text))
             copy.setOnClickListener { onCopy(item.text) }
             speak.setOnClickListener { onSpeak(item.text) }
-            copy.alpha = if (item.streaming) 0.3f else 1f
-            speak.alpha = if (item.streaming) 0.3f else 1f
+            retry.setOnClickListener { onRegenerate(position) }
+
+            val busy = item.streaming
+            copy.alpha = if (busy) 0.3f else 1f
+            speak.alpha = if (busy) 0.3f else 1f
+            retry.alpha = if (busy) 0.3f else 1f
+            copy.isEnabled = !busy
+            speak.isEnabled = !busy
+            retry.isEnabled = !busy
         }
     }
 
@@ -111,7 +143,12 @@ class ChatAdapter(
                 else -> R.color.apex_red
             }
             glyph.setTextColor(ContextCompat.getColor(context, accent))
-            meta.setTextColor(ContextCompat.getColor(context, if (item.ok) R.color.apex_text_faint else R.color.apex_red))
+            meta.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    if (item.ok) R.color.apex_text_faint else R.color.apex_red
+                )
+            )
         }
     }
 }

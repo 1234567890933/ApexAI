@@ -11,8 +11,8 @@ android {
         applicationId "com.apex.ai"
         minSdk 24
         targetSdk 34
-        versionCode 8
-        versionName "1.7-beta"
+        versionCode 9
+        versionName "1.8-beta"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ["en"]
