@@ -32,10 +32,13 @@ class FsListTool(private val fs: SandboxFs) : BaseTool() {
     override suspend fun execute(call: ToolCall): String = withContext(Dispatchers.IO) {
         val path = call.args["path"].orEmpty()
         val entries = fs.list(path)
-        if (entries.isEmpty()) return "Empty directory."
-        entries.joinToString("\n") { entry ->
-            val kind = if (entry.isDir) "dir " else "file"
-            "$kind  ${"%8d".format(entry.bytes)}  ${entry.path}"
+        if (entries.isEmpty()) {
+            "Empty directory."
+        } else {
+            entries.joinToString("\n") { entry ->
+                val kind = if (entry.isDir) "dir " else "file"
+                "$kind  ${"%8d".format(entry.bytes)}  ${entry.path}"
+            }
         }
     }
 }
@@ -90,8 +93,7 @@ class FsSearchTool(private val fs: SandboxFs) : BaseTool() {
 
     override suspend fun execute(call: ToolCall): String = withContext(Dispatchers.IO) {
         val hits = fs.search(call.args["path"].orEmpty(), require(call, "needle"))
-        if (hits.isEmpty()) return "No matches."
-        hits.joinToString("\n")
+        if (hits.isEmpty()) "No matches." else hits.joinToString("\n")
     }
 }
 
