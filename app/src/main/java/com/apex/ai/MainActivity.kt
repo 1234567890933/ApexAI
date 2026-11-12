@@ -163,9 +163,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun clearStartupMarkerAfterFirstFrame() {
         val decor = window.decorView
-        decor.viewTreeObserver.addOnDrawListener(
-            object : ViewTreeObserver.OnDrawListener {
-                override fun onDraw() {
+        val listener = object : ViewTreeObserver.OnDrawListener {
+            override fun onDraw() {
+                // ViewTreeObserver forbids removing a draw listener from inside
+                // the dispatch itself — it throws IllegalStateException. Hop to
+                // the next loop iteration first.
+                decor.post {
                     if (decor.viewTreeObserver.isAlive) {
                         decor.viewTreeObserver.removeOnDrawListener(this)
                     }
@@ -174,7 +177,8 @@ class MainActivity : AppCompatActivity() {
                     ApexLog.d("Main", "first frame drawn")
                 }
             }
-        )
+        }
+        decor.viewTreeObserver.addOnDrawListener(listener)
     }
 
     // ---------------------------------------------------------------- binding
@@ -532,7 +536,30 @@ class MainActivity : AppCompatActivity() {
     private fun buildSuggestions() {
         val row = findViewById<LinearLayout>(R.id.suggestionRow)
         row.removeAllViews()
-        val prompts = listOf(
+        val prompts = mutableListOf<String>()
+        val packManager = com.apex.ai.core.PackManager(this)
+        if (!packManager.isInstalled()) {
+            // The one-tap path: this chip is the whole installer.
+            val chip = TextView(this)
+            chip.text = "⬇  Download engine packs"
+            chip.setTextColor(ContextCompat.getColor(this, R.color.apex_text))
+            chip.textSize = 12f
+            chip.setBackgroundResource(R.drawable.bg_chip_active)
+            chip.setPadding(dp(14), dp(9), dp(14), dp(9))
+            val chipParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            chipParams.marginEnd = dp(8)
+            chip.layoutParams = chipParams
+            chip.setOnClickListener {
+                container.haptics.tap(it)
+                startActivity(Intent(this, com.apex.ai.ui.SetupActivity::class.java))
+            }
+            Motion.attachPressScale(chip, 0.94f)
+            row.addView(chip)
+        }
+        prompts += listOf(
             "Plan a 7-day Hampi trip on ₹30,000",
             "Review this Kotlin snippet for leaks",
             "Explain SSE streaming in five lines",

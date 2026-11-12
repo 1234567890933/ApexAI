@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "generated": "2026-11-12",
+  "packs": [
+    {
+      "name": "Prompt library",
+      "file": "prompts.json",
+      "sha256": "bcc3e3e62d723ea9f3d47e7193c32430ab39e49d3495e1d9b4bdfbbd279e64ff",
+      "bytes": 4408
+    },
+    {
+      "name": "Tool guide",
+      "file": "toolguide.json",
+      "sha256": "bc728a31ba844f92229447fc88d7235016dc17b91d0457a569d8aaa8c1312976",
+      "bytes": 3260
+    }
+  ]
+}

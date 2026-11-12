@@ -45,6 +45,21 @@ jobs:
           echo "platforms:"; ls "$SDK_ROOT/platforms" || true
           echo "build-tools:"; ls "$SDK_ROOT/build-tools" || true
 
+      - name: Ensure NDK and CMake
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          SDKMGR=$(ls -d "$SDK_ROOT"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1 || true)
+          if [ -n "$SDKMGR" ]; then
+            if [ ! -d "$SDK_ROOT/ndk" ] || [ -z "$(ls -A "$SDK_ROOT/ndk" 2>/dev/null)" ]; then
+              yes | "$SDKMGR" "ndk;26.1.10909125" > /dev/null 2>&1 || true
+            fi
+            if [ ! -d "$SDK_ROOT/cmake" ] || [ -z "$(ls -A "$SDK_ROOT/cmake" 2>/dev/null)" ]; then
+              yes | "$SDKMGR" "cmake;3.22.1" > /dev/null 2>&1 || true
+            fi
+          fi
+          echo "ndk:"; ls "$SDK_ROOT/ndk" || true
+          echo "cmake:"; ls "$SDK_ROOT/cmake" || true
+
       - name: Generate signing keystore
         run: |
           keytool -genkeypair -v \

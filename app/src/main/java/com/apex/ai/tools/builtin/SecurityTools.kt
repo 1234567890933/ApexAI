@@ -116,28 +116,12 @@ class DexStringsTool(private val sandbox: SandboxFs) : BaseTool() {
         if (!file.exists()) throw java.io.FileNotFoundException("Not found in sandbox: $relative")
         if (file.length() > 40L * 1024 * 1024) throw IllegalArgumentException("File too large (40 MB cap)")
 
+        val raw = readBounded(file, 40 * 1024 * 1024)
+        val candidates = com.apex.ai.core.NativeBridge.printableStrings(raw, 6, limit * 4)
         val found = LinkedHashSet<String>()
-        file.inputStream().buffered(64 * 1024).use { stream ->
-            val chunk = ByteArray(64 * 1024)
-            val current = StringBuilder()
-            while (found.size < limit) {
-                val read = stream.read(chunk)
-                if (read <= 0) break
-                for (i in 0 until read) {
-                    val b = chunk[i].toInt() and 0xFF
-                    if (b in 32..126) {
-                        current.append(b.toChar())
-                        if (current.length > 400) current.setLength(0)
-                    } else {
-                        if (current.length >= 6) {
-                            val s = current.toString()
-                            if (filter == null || s.lowercase().contains(filter)) found.add(s)
-                        }
-                        current.setLength(0)
-                        if (found.size >= limit) break
-                    }
-                }
-            }
+        for (candidate in candidates) {
+            if (filter == null || candidate.lowercase().contains(filter)) found.add(candidate)
+            if (found.size >= limit) break
         }
         if (found.isEmpty()) {
             "No printable strings matched."
@@ -166,14 +150,8 @@ class EntropyTool(private val sandbox: SandboxFs) : BaseTool() {
         val sample = readBounded(file, 256 * 1024)
         if (sample.isEmpty()) throw IllegalArgumentException("Empty file")
 
-        val counts = IntArray(256)
-        sample.forEach { counts[it.toInt() and 0xFF]++ }
-        var entropy = 0.0
-        for (count in counts) {
-            if (count == 0) continue
-            val p = count.toDouble() / sample.size
-            entropy -= p * (Math.log(p) / Math.log(2.0))
-        }
+        // Native C++ when the library loaded, Kotlin otherwise.
+        val entropy = com.apex.ai.core.NativeBridge.shannonEntropy(sample)
         val verdict = when {
             entropy > 7.5 -> "very high — likely compressed or encrypted"
             entropy > 6.5 -> "high — packed or compressed payload"

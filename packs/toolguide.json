@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "generated": "2026-11-12",
+  "items": [
+    {
+      "tool": "calc",
+      "title": "Evaluate an expression",
+      "example": "calc(expr=\"(1250*0.18)+sqrt(144)\")"
+    },
+    {
+      "tool": "hash_text",
+      "title": "Digest a string",
+      "example": "hash_text(text=\"hello\", algorithm=\"sha256\")"
+    },
+    {
+      "tool": "base64",
+      "title": "Encode or decode",
+      "example": "base64(text=\"hello\", mode=\"encode\")"
+    },
+    {
+      "tool": "uuid",
+      "title": "Generate ids",
+      "example": "uuid(count=\"4\")"
+    },
+    {
+      "tool": "now",
+      "title": "Current time",
+      "example": "now(timezone=\"Asia/Kolkata\")"
+    },
+    {
+      "tool": "json_format",
+      "title": "Pretty-print JSON",
+      "example": "json_format(json={\"a\":1})"
+    },
+    {
+      "tool": "device_info",
+      "title": "Device facts",
+      "example": "device_info()"
+    },
+    {
+      "tool": "text_stats",
+      "title": "Count words",
+      "example": "text_stats(text=\"...\")"
+    },
+    {
+      "tool": "word_freq",
+      "title": "Top words",
+      "example": "word_freq(text=\"...\", top=\"10\")"
+    },
+    {
+      "tool": "regex_test",
+      "title": "Test a pattern",
+      "example": "regex_test(pattern=\"\\\\d+\", text=\"abc123\")"
+    },
+    {
+      "tool": "case_convert",
+      "title": "Change case",
+      "example": "case_convert(text=\"hello world\", target=\"snake\")"
+    },
+    {
+      "tool": "diff",
+      "title": "Line diff",
+      "example": "diff(a=\"one\\\\ntwo\", b=\"one\\\\nthree\")"
+    },
+    {
+      "tool": "dns_lookup",
+      "title": "Resolve a host",
+      "example": "dns_lookup(host=\"example.com\")"
+    },
+    {
+      "tool": "http_probe",
+      "title": "Check a URL",
+      "example": "http_probe(url=\"https://example.com\", method=\"HEAD\")"
+    },
+    {
+      "tool": "port_probe",
+      "title": "Port reachability",
+      "example": "port_probe(host=\"192.168.1.1\", ports=\"80,443\")"
+    },
+    {
+      "tool": "url_parse",
+      "title": "Break down a URL",
+      "example": "url_parse(url=\"https://a.com:8443/x?y=1\")"
+    },
+    {
+      "tool": "apk_inspect",
+      "title": "List APK contents",
+      "example": "apk_inspect(path=\"sample.apk\")"
+    },
+    {
+      "tool": "manifest_peek",
+      "title": "Read the manifest",
+      "example": "manifest_peek(path=\"sample.apk\")"
+    },
+    {
+      "tool": "dex_strings",
+      "title": "Extract strings",
+      "example": "dex_strings(path=\"sample.apk\", limit=\"80\")"
+    },
+    {
+      "tool": "file_entropy",
+      "title": "Entropy triage",
+      "example": "file_entropy(path=\"sample.apk\")"
+    },
+    {
+      "tool": "fs_list",
+      "title": "List sandbox",
+      "example": "fs_list(path=\"\")"
+    },
+    {
+      "tool": "fs_read",
+      "title": "Read a file",
+      "example": "fs_read(path=\"notes.txt\")"
+    },
+    {
+      "tool": "fs_write",
+      "title": "Write a file",
+      "example": "fs_write(path=\"notes.txt\", content=\"hello\")"
+    },
+    {
+      "tool": "fs_search",
+      "title": "Search files",
+      "example": "fs_search(needle=\"error\")"
+    },
+    {
+      "tool": "fs_delete",
+      "title": "Delete a file",
+      "example": "fs_delete(path=\"notes.txt\")"
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "generated": "2026-11-12",
+  "items": [
+    {
+      "category": "Research",
+      "title": "Explain a paper",
+      "prompt": "Explain the key claim, method and limitation of this paper in five sentences, then say whether the evidence supports the claim."
+    },
+    {
+      "category": "Research",
+      "title": "Compare options",
+      "prompt": "Compare {A} and {B} on cost, risk and time-to-value in a table, then recommend one and say what would change your mind."
+    },
+    {
+      "category": "Research",
+      "title": "Fact-check",
+      "prompt": "List every factual claim in the text below, mark each verified, unverified or false, and cite what you used."
+    },
+    {
+      "category": "Code",
+      "title": "Explain a stack trace",
+      "prompt": "Read this stack trace, name the root cause before the fix, then give the smallest patch and how to prove it."
+    },
+    {
+      "category": "Code",
+      "title": "Write tests",
+      "prompt": "Write unit tests for this function covering the happy path, one boundary and one failure case. No mocks unless unavoidable."
+    },
+    {
+      "category": "Code",
+      "title": "Review a diff",
+      "prompt": "Review this diff for correctness, security and readability. Rank findings by severity and skip style nits."
+    },
+    {
+      "category": "Code",
+      "title": "Refactor safely",
+      "prompt": "Refactor this into smaller functions without changing behaviour. Show the diff and list what could break."
+    },
+    {
+      "category": "Writing",
+      "title": "Tighten this",
+      "prompt": "Cut this text by 40% without losing a fact. Keep every number and name."
+    },
+    {
+      "category": "Writing",
+      "title": "Rewrite for a beginner",
+      "prompt": "Rewrite this for someone with no background, using one analogy and no jargon."
+    },
+    {
+      "category": "Writing",
+      "title": "Turn notes into a doc",
+      "prompt": "Turn these notes into a structured document with a summary at the top and decisions called out."
+    },
+    {
+      "category": "Planning",
+      "title": "Plan a week",
+      "prompt": "Plan the next seven days for this goal. Each day gets one concrete action with a completion test."
+    },
+    {
+      "category": "Planning",
+      "title": "Pre-mortem",
+      "prompt": "Assume this plan failed six months from now. List the five most likely reasons, ranked, with the cheapest early warning for each."
+    },
+    {
+      "category": "Planning",
+      "title": "Estimate",
+      "prompt": "Estimate the effort for this in days, show your assumptions, and give the range rather than a single number."
+    },
+    {
+      "category": "Money",
+      "title": "Budget",
+      "prompt": "Build a monthly budget from these numbers in rupees. Use the calc tool, show the arithmetic, and flag the one line most likely to overrun."
+    },
+    {
+      "category": "Money",
+      "title": "Compare loans",
+      "prompt": "Compare these two loan offers on total interest paid, not EMI. Do the arithmetic with the calc tool."
+    },
+    {
+      "category": "Study",
+      "title": "Flashcards",
+      "prompt": "Turn this material into twelve question-and-answer flashcards, hardest first."
+    },
+    {
+      "category": "Study",
+      "title": "Teach it back",
+      "prompt": "Explain this concept, then ask me three questions that would prove I understood it."
+    },
+    {
+      "category": "Security",
+      "title": "Review an APK",
+      "prompt": "Inspect this APK in the sandbox: list its permissions, native libraries and any suspicious entry names, then say what each implies."
+    },
+    {
+      "category": "Security",
+      "title": "Harden a config",
+      "prompt": "List the risky defaults in this configuration, what an attacker gains from each, and the exact change to make."
+    },
+    {
+      "category": "Everyday",
+      "title": "Draft a message",
+      "prompt": "Draft a short, polite message to {person} about {topic}. Give two versions: one firm, one soft."
+    },
+    {
+      "category": "Everyday",
+      "title": "Decide",
+      "prompt": "I am deciding between these options. Ask me the three questions that would actually settle it, then recommend."
+    },
+    {
+      "category": "Everyday",
+      "title": "Summarise a thread",
+      "prompt": "Summarise this conversation into decisions made, open questions and who owns what."
+    }
+  ]
+}
