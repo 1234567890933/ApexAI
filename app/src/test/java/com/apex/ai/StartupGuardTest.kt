@@ -1,6 +1,9 @@
 package com.apex.ai
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import com.apex.ai.core.StartupGuard
 import org.junit.Assert.assertFalse
@@ -35,14 +38,24 @@ class StartupGuardTest {
         assertFalse(StartupGuard.crashedLastLaunch(context))
     }
 
+    /**
+     * Actually draws the window: every custom view runs its onDraw, which is
+     * where the 1.4 crash lived. A shader or listener mistake fails here.
+     */
     @Test
-    fun mainActivityClearsTheMarkerOnFirstFrame() {
+    fun mainActivitySurvivesAFullTraversalAndDraw() {
         StartupGuard.clear(context)
         val controller = Robolectric.buildActivity(MainActivity::class.java).setup()
-        // Drive a full traversal so the draw listener fires.
         val decor = controller.get().window.decorView
-        decor.measure(0, 0)
+
+        val width = View.MeasureSpec.makeMeasureSpec(480, View.MeasureSpec.EXACTLY)
+        val height = View.MeasureSpec.makeMeasureSpec(800, View.MeasureSpec.EXACTLY)
+        decor.measure(width, height)
         decor.layout(0, 0, 480, 800)
+
+        val bitmap = Bitmap.createBitmap(480, 800, Bitmap.Config.ARGB_8888)
+        decor.draw(Canvas(bitmap))
+
         assertFalse("start-up must complete cleanly", controller.get().isFinishing)
         controller.pause().stop().destroy()
     }
