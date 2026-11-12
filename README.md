@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="../../actions/workflows/build-apk.yml"><img alt="Build" src="https://github.com/apex-ai/apex-ai/actions/workflows/build-apk.yml/badge.svg"></a>
+  <a href="https://github.com/1234567890933/ApexAI/actions/workflows/build-apk.yml"><img alt="Build" src="https://github.com/1234567890933/ApexAI/actions/workflows/build-apk.yml/badge.svg"></a>
   <img alt="minSdk" src="https://img.shields.io/badge/minSdk-24-7C5CFF">
   <img alt="targetSdk" src="https://img.shields.io/badge/targetSdk-34-22D3EE">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-F472B6">
@@ -68,7 +68,7 @@ inspect.
 Locally:
 
 ```bash
-git clone https://github.com/<you>/ApexAI.git
+git clone https://github.com/1234567890933/ApexAI.git
 cd ApexAI
 gradle assembleDebug        # or ./gradlew after `gradle wrapper`
 ```
@@ -130,3 +130,8 @@ so cancellation is just cancelling the collector.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+
+Built and verified by CI: `gradle test` → `assembleDebug` → `assembleRelease`.
+The latest signed APKs are attached to the [releases page](../../releases).
