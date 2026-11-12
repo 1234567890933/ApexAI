@@ -41,6 +41,9 @@ class Android10LaunchTest {
     fun vaultReadsNeverThrowOnAndroid10() {
         val context = ApplicationProvider.getApplicationContext<Application>()
         val vault = LocalVault(context)
+        // Store creation is deferred by design; on a device it happens on a
+        // worker thread. Here we call it directly so the round-trip is testable.
+        vault.warmUp()
         // Nothing stored yet: a read must return null, never throw.
         assertNull(vault.getApiKey("gemini"))
         assertNotNull(vault.selectedAgentId)
