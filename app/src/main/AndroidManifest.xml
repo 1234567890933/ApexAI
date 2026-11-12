@@ -47,6 +47,12 @@
             android:parentActivityName=".MainActivity" />
 
         <activity
+            android:name=".ui.AboutActivity"
+            android:exported="false"
+            android:label="About and help"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
             android:name=".ui.SetupActivity"
             android:exported="false"
             android:label="Engine packs"

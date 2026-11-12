@@ -170,6 +170,10 @@ class SettingsActivity : AppCompatActivity() {
             confirmWipe()
         }
         btnAdvancedUnlock.setOnClickListener { toggleAdvanced() }
+        findViewById<com.google.android.material.button.MaterialButton>(R.id.btnAbout)
+            .setOnClickListener {
+                startActivity(android.content.Intent(this, AboutActivity::class.java))
+            }
         findViewById<com.google.android.material.button.MaterialButton>(R.id.btnManagePacks)
             .setOnClickListener {
                 startActivity(android.content.Intent(this, SetupActivity::class.java))

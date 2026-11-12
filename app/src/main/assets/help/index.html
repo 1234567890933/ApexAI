@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apex AI · Help</title>
+<style>
+  :root {
+    --bg: #06080f;
+    --card: #12182a;
+    --stroke: rgba(255,255,255,0.10);
+    --text: #e8ecf7;
+    --dim: #8a93ab;
+    --faint: #5b6478;
+    --violet: #7c5cff;
+    --cyan: #22d3ee;
+    --pink: #f472b6;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Roboto", "Segoe UI", system-ui, sans-serif;
+    font-size: 15px; line-height: 1.55;
+    padding: 18px 18px 40px;
+  }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.3px; }
+  h2 { font-size: 15px; margin: 26px 0 10px; color: var(--cyan); letter-spacing: 0.2px; }
+  p { margin: 0 0 10px; color: var(--dim); }
+  .mark { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .mark svg { width: 44px; height: 44px; flex: 0 0 auto; }
+  .sub { color: var(--faint); font-size: 12px; margin-top: 2px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--stroke);
+    border-radius: 16px;
+    padding: 14px 14px 6px;
+    margin: 0 0 12px;
+  }
+  ul { margin: 0 0 10px; padding-left: 18px; }
+  li { margin-bottom: 6px; color: var(--dim); }
+  li b { color: var(--text); font-weight: 600; }
+  code {
+    font-family: ui-monospace, "Roboto Mono", monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 1px 6px;
+    color: var(--text);
+  }
+  input[type="search"] {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    color: var(--text);
+    padding: 11px 14px;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 12px;
+  }
+  input[type="search"]::placeholder { color: var(--faint); }
+  details {
+    background: var(--card);
+    border: 1px solid var(--stroke);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    list-style: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "＋"; float: right; color: var(--faint); }
+  details[open] summary::after { content: "−"; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .row:last-child { border-bottom: 0; }
+  .row span:first-child { color: var(--text); font-size: 13px; }
+  .row span:last-child { color: var(--faint); font-size: 12px; text-align: right; }
+  .hidden { display: none; }
+  .pill {
+    display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 999px;
+    border: 1px solid var(--stroke); color: var(--cyan); margin-right: 6px;
+  }
+  footer { margin-top: 28px; color: var(--faint); font-size: 11px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="mark">
+  <svg viewBox="0 0 108 108" aria-label="Apex AI">
+    <path d="M54 26 L77 39.5 L77 66.5 L54 80 L31 66.5 L31 39.5 Z"
+          fill="none" stroke="rgba(255,255,255,0.30)" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M40 73 L54 35 L68 73" fill="none" stroke="#7c5cff" stroke-width="7"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 62 L62 62" fill="none" stroke="#22d3ee" stroke-width="5.5" stroke-linecap="round"/>
+    <circle cx="54" cy="88" r="3.4" fill="#f472b6"/>
+  </svg>
+  <div>
+    <h1>Apex AI</h1>
+    <div class="sub">Multi-agent client · works offline for everything on this page</div>
+  </div>
+</div>
+
+<p>This page ships inside the APK. It loads from local assets, needs no network,
+and tells you exactly what the app can do without opening a single menu.</p>
+
+<h2>Getting started</h2>
+<div class="card">
+  <ul>
+    <li><b>1. Connect a provider.</b> Settings → pick Gemini, OpenAI, OpenRouter, Groq or any OpenAI-compatible endpoint → paste the key. It is stored in the Android Keystore.</li>
+    <li><b>2. Install the packs.</b> Tap <i>Download engine packs</i> on the empty chat screen. One tap, checksum verified, stored on this device.</li>
+    <li><b>3. Pick an agent.</b> Tap the mark at the top left. Single agents answer in one pass; autonomous agents use tools; team agents split the work.</li>
+  </ul>
+</div>
+
+<h2>Agents</h2>
+<div class="card">
+  <div class="row"><span>Apex</span><span>general · autonomous</span></div>
+  <div class="row"><span>Scout</span><span>research · autonomous</span></div>
+  <div class="row"><span>Forge</span><span>code · autonomous</span></div>
+  <div class="row"><span>Ledger</span><span>numbers · autonomous</span></div>
+  <div class="row"><span>Quill</span><span>prose · single</span></div>
+  <div class="row"><span>Compass</span><span>planning · single</span></div>
+  <div class="row"><span>Sentinel</span><span>security review · autonomous</span></div>
+  <div class="row"><span>Prism</span><span>reverse engineering · autonomous</span></div>
+  <div class="row"><span>Sage</span><span>teaching · single</span></div>
+  <div class="row"><span>Glitch</span><span>debugging · autonomous</span></div>
+  <div class="row"><span>Atlas</span><span>travel and budget · autonomous</span></div>
+  <div class="row"><span>Muse</span><span>naming · single</span></div>
+  <div class="row"><span>Briefer</span><span>compression · single</span></div>
+  <div class="row"><span>Team · Ship</span><span>4 specialists · team</span></div>
+  <div class="row"><span>Team · Probe</span><span>3 specialists · team</span></div>
+</div>
+
+<h2>Tools <span class="pill">25</span></h2>
+<input type="search" id="q" placeholder="Filter tools — try “hash”, “port”, “apk”" autocomplete="off">
+
+<details open>
+  <summary>Compute and text</summary>
+  <div class="row"><span>calc</span><span>arithmetic, functions</span></div>
+  <div class="row"><span>uuid</span><span>random ids</span></div>
+  <div class="row"><span>now</span><span>time in any zone</span></div>
+  <div class="row"><span>text_stats</span><span>words, lines, reading time</span></div>
+  <div class="row"><span>word_freq</span><span>top terms</span></div>
+  <div class="row"><span>regex_test</span><span>matches and groups</span></div>
+  <div class="row"><span>case_convert</span><span>snake, camel, kebab</span></div>
+  <div class="row"><span>diff</span><span>line diff</span></div>
+  <div class="row"><span>base64</span><span>encode and decode</span></div>
+  <div class="row"><span>json_format</span><span>validate and pretty-print</span></div>
+</details>
+
+<details>
+  <summary>Network</summary>
+  <div class="row"><span>dns_lookup</span><span>resolve a host</span></div>
+  <div class="row"><span>http_probe</span><span>status, latency, headers</span></div>
+  <div class="row"><span>port_probe</span><span>TCP reachability</span></div>
+  <div class="row"><span>url_parse</span><span>break a URL apart</span></div>
+</details>
+
+<details>
+  <summary>Security and reverse engineering</summary>
+  <div class="row"><span>hash_text</span><span>md5, sha1, sha256, sha512</span></div>
+  <div class="row"><span>apk_inspect</span><span>archive contents, dex, native libs</span></div>
+  <div class="row"><span>manifest_peek</span><span>package, permissions, components</span></div>
+  <div class="row"><span>dex_strings</span><span>printable strings, native fast path</span></div>
+  <div class="row"><span>file_entropy</span><span>Shannon entropy, magic bytes</span></div>
+</details>
+
+<details>
+  <summary>Files and system</summary>
+  <div class="row"><span>fs_list</span><span>list the sandbox</span></div>
+  <div class="row"><span>fs_read</span><span>read a file</span></div>
+  <div class="row"><span>fs_write</span><span>write or append</span></div>
+  <div class="row"><span>fs_search</span><span>grep across files</span></div>
+  <div class="row"><span>fs_delete</span><span>remove a path</span></div>
+  <div class="row"><span>device_info</span><span>screen, ABI, memory</span></div>
+</details>
+
+<h2>Privacy</h2>
+<div class="card">
+  <ul>
+    <li>Your provider key never leaves the device except in the request header to the provider you chose.</li>
+    <li>No analytics, no telemetry, no third-party SDK that phones home.</li>
+    <li>Conversations are stored as JSON in this app's private storage, capped at 400 messages each.</li>
+    <li>The sandbox filesystem rejects any path that resolves outside its own directory.</li>
+  </ul>
+</div>
+
+<h2>When something goes wrong</h2>
+<div class="card">
+  <ul>
+    <li>The app writes a start-up breadcrumb and any crash trace to its own storage.</li>
+    <li>If a launch fails before the first frame, the next launch opens a recovery screen with that trace.</li>
+    <li>Settings → <i>Last crash report</i> shows the same text, and you can copy it.</li>
+  </ul>
+</div>
+
+<footer>Built with Kotlin, Java, C++ and this page. MIT licensed.</footer>
+
+<script>
+  (function () {
+    var input = document.getElementById('q');
+    if (!input) return;
+    var rows = Array.prototype.slice.call(document.querySelectorAll('.row'));
+    var groups = Array.prototype.slice.call(document.querySelectorAll('details'));
+
+    input.addEventListener('input', function () {
+      var needle = input.value.trim().toLowerCase();
+      groups.forEach(function (group) {
+        var localRows = Array.prototype.slice.call(group.querySelectorAll('.row'));
+        var visible = 0;
+        localRows.forEach(function (row) {
+          var haystack = row.textContent.toLowerCase();
+          var match = needle === '' || haystack.indexOf(needle) !== -1;
+          row.classList.toggle('hidden', !match);
+          if (match) visible++;
+        });
+        group.classList.toggle('hidden', needle !== '' && visible === 0);
+        if (needle !== '' && visible > 0) group.setAttribute('open', 'open');
+      });
+    });
+
+    // Nothing here touches the network. Guard against accidental navigation.
+    document.addEventListener('click', function (event) {
+      var anchor = event.target.closest && event.target.closest('a');
+      if (anchor && anchor.getAttribute('href') && anchor.getAttribute('href').indexOf('http') === 0) {
+        event.preventDefault();
+      }
+    });
+  })();
+</script>
+</body>
+</html>

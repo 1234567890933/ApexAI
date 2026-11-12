@@ -308,11 +308,26 @@
             android:layout_marginTop="18dp"
             android:background="@color/apex_stroke_soft" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="18dp"
+            android:background="@color/apex_stroke_soft" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAbout"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="About and help"
+            android:textColor="@color/apex_violet" />
+
         <TextView
             style="@style/Apex.Text.Title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="10dp"
             android:text="Engine log" />
 
         <TextView
